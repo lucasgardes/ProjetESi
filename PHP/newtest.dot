@@ -1,0 +1,38 @@
+digraph {
+    # Nodes
+    node [shape=circle];
+
+# Stations Merlane
+    "La Défense";
+    "Charles de Gaulle-Étoile";
+    "Auber";
+    "Châtelet-Les Halles";
+    "Gare de Lyon";
+    "Nation";
+	
+# Stations Velane
+	"Gare du Nord";
+	"Châtelet-Les Halles";
+	"Saint-Michel-Notre-Dame";
+	"Luxembourg";
+	"Port-Royal";
+	"Denfert-Rochereau";
+	"Cité Universitaire";
+
+# Rue Merlane
+    edge [color=blue];
+    "La Défense" -> "Charles de Gaulle-Étoile";
+    "Charles de Gaulle-Étoile" -> "Auber";
+    "Auber" -> "Châtelet-Les Halles";
+    "Châtelet-Les Halles" -> "Gare de Lyon";
+    "Gare de Lyon" -> "Nation";
+
+#Rue Velane
+    edge [color=red];
+    "Gare du Nord" -> "Châtelet-Les Halles";
+    "Châtelet-Les Halles" -> "Saint-Michel-Notre-Dame";
+    "Saint-Michel-Notre-Dame" -> "Luxembourg";
+    "Luxembourg" -> "Port-Royal";
+    "Port-Royal" -> "Denfert-Rochereau";
+    "Denfert-Rochereau" -> "Cité Universitaire";
+}
