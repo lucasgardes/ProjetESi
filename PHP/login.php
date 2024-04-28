@@ -1,8 +1,7 @@
 <?php
 $post = $_POST;
-var_dump($post);
-die();
-if (isset($post) && !empty($post)) {
+    $logged = false;
+    if (isset($post) && !empty($post)) {
     $firstname = $post['firstname'];
     $lastname = $post['lastname'];
     $email = $post['email'];
@@ -31,14 +30,11 @@ if (isset($post) && !empty($post)) {
     $result = $conn->query($sql);
 
     if (!empty($result)) {
-
+        $logged = true;
     } else {
-        
+        $logged = false;
     }
 
     $conn->close();
 }
-
-
-
 ?>
