@@ -1,31 +1,25 @@
 <?php
-$host = 'localhost';
-$db = 'nom_de_votre_base_de_donnees';
-$user = 'utilisateur_de_la_base_de_donnees';
-$pass = 'mot_de_passe_de_la_base_de_donnees';
-$charset = 'utf8mb4';
+$servername = "localhost";
+$username = "348216";
+$password_bdd = "mdp4B2D2Pr0j€t";
+$dbname = "mysql-projet-poubelle";
+$conn = new mysqli($servername, $username, $password_bdd, $dbname);
 
-$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-$options = [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    PDO::ATTR_EMULATE_PREPARES => false,
-];
+if (!$conn->set_charset("utf8")) {
+    echo "Erreur lors du chargement du jeu de caractères utf8 : " . $conn->error;
+} else {
+    echo "Jeu de caractères actuel : " . $conn->character_set_name();
+}
 
-try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
-} catch (\PDOException $e) {
-    echo "Erreur de connexion : " . $e->getMessage();
-    exit;
+if ($conn->connect_error) {
+    die("La connexion a échoué : " . $conn->connect_error);
 }
 
 if (isset($_GET['email'])) {
     $email = $_GET['email'];
-    $sql = "UPDATE users SET verified = 1 WHERE email = :email";
-    $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(':email', $email);
-    $stmt->execute();
+    $sql = "UPDATE users SET verified = 1 WHERE email = " . $email;
+    $result = $conn->query($sql);
 
-    echo "Votre compte a été vérifié avec succès!";
+    header('Location: index.php');
 }
 ?>

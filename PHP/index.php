@@ -21,7 +21,7 @@
 
     <?php include 'login.php';?>
     <div class="w3-right w3-hide-small" id="login-signup-container">
-        <a href="login2.php" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Connexion</a>
+        <a href="login.php" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Connexion</a>
         <a href="signup.php" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Inscription</a>
     </div>
     <?php if ($logged) : ?>

@@ -1,23 +1,13 @@
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $host = 'localhost';
-    $db = 'nom_de_votre_base_de_donnees';
-    $user = 'utilisateur_de_la_base_de_donnees';
-    $pass = 'mot_de_passe_de_la_base_de_donnees';
-    $charset = 'utf8mb4';
+    $servername = "localhost";
+    $username = "348216";
+    $password_bdd = "mdp4B2D2Pr0j€t";
+    $dbname = "mysql-projet-poubelle";
+    $conn = new mysqli($servername, $username, $password_bdd, $dbname);
 
-    $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-    $options = [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ];
-
-    try {
-        $pdo = new PDO($dsn, $user, $pass, $options);
-    } catch (\PDOException $e) {
-        echo "Erreur de connexion : " . $e->getMessage();
-        exit;
+    if ($conn->connect_error) {
+        die("La connexion a échoué : " . $conn->connect_error);
     }
 
 
@@ -25,16 +15,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
     // Insertion des données
-    $sql = "INSERT INTO users (email, password, verified) VALUES (:email, :password, 0)";
-    $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(':email', $email);
-    $stmt->bindParam(':password', $password);
-    $stmt->execute();
+    $sql = "SET NAMES UTF8";
+    $result = $conn->query($sql);
+    $sql = "INSERT INTO users (email, password, verified) VALUES (" . $email . ", " . $password . ", 0)";
+    $result = $conn->query($sql);
 
     // Envoi de l'email de confirmation
     $to = $email;
     $subject = "Confirmation de votre compte";
-    $message = "Veuillez cliquer sur ce lien pour confirmer votre compte : http://votredomaine.com/verify.php?email=$email";
+    $message = "Veuillez cliquer sur ce lien pour confirmer votre compte : http://localhost/projetBSI/projetESi/PHP/verify.php?email=$email";
     $headers = "From: no-reply@votredomaine.com\r\n";
     $headers .= "Reply-To: no-reply@votredomaine.com\r\n";
     $headers .= "X-Mailer: PHP/" . phpversion();
