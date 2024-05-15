@@ -19,6 +19,11 @@ digraph {
 	"Denfert-Rochereau";
 	"Cité Universitaire";
 
+# Stations des Tourneurs
+	"Gare du Nord";
+	"Châtelet-Les Halles";
+    "Gare de Lyon";
+
 # Rue Merlane
     edge [color=blue];
     "La Défense" -> "Charles de Gaulle-Étoile";
@@ -35,4 +40,9 @@ digraph {
     "Luxembourg" -> "Port-Royal";
     "Port-Royal" -> "Denfert-Rochereau";
     "Denfert-Rochereau" -> "Cité Universitaire";
+
+#Rue Tourneurs
+    edge [color=green];
+    "Gare du Nord" -> "Châtelet-Les Halles";
+    "Châtelet-Les Halles" -> "Gare de Lyon";
 }
