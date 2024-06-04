@@ -24,6 +24,71 @@ digraph {
 	"Châtelet-Les Halles";
     "Gare de Lyon";
 
+# Stations Croix-Baragnon
+    "La Défense";
+    "Esplanade de la Défense";
+    "Pont de Neuilly";
+    "Les Sablons";
+    "Porte Maillot";
+    "Argentine";
+    "Charles de Gaulle-Étoile";
+    "George V";
+    "Franklin D. Roosevelt";
+    "Champs-Élysées-Clemenceau";
+    "Concorde";
+    "Tuileries";
+    "Palais Royal-Musée du Louvre";
+    "Louvre-Rivoli";
+    "Châtelet";
+    "Hôtel de Ville";
+    "Saint-Paul";
+    "Bastille";
+    "Gare de Lyon";
+    "Reuilly-Diderot";
+    "Nation";
+    "Porte de Vincennes";
+    "Saint-Mandé";
+    "Bérault";
+    "Château de Vincennes";
+
+# Stations Genty-Magre
+    "La Courneuve-8 Mai 1945";
+    "Fort d'Aubervilliers";
+    "Aubervilliers-Pantin-Quatre";
+    "Chemins";
+    "Porte de la Villette";
+    "Corentin Cariou";
+    "Crimée";
+    "Riquet";
+    "Stalingrad";
+    "Louis Blanc";
+    "Château-Landon";
+    "Gare de l'Est";
+    "Poissonnière";
+    "Cadet";
+    "Le Peletier";
+    "Chaussée d'Antin-La Fayette";
+    "Opéra";
+    "Pyramides";
+    "Palais Royal-Musée du Louvre";
+    "Pont Neuf";
+    "Châtelet";
+    "Pont Marie";
+    "Sully-Morland";
+    "Jussieu";
+    "Place Monge";
+    "Censier-Daubenton";
+    "Les Gobelins";
+    "Place d'Italie";
+    "Tolbiac";
+    "Maison Blanche";
+    "Porte d'Italie";
+    "Porte de Choisy";
+    "Porte d'Ivry";
+    "Pierre et Marie Curie";
+    "Mairie d'Ivry";
+
+
 # Rue Merlane
     edge [color=blue];
     "La Défense" -> "Charles de Gaulle-Étoile";
@@ -32,7 +97,7 @@ digraph {
     "Châtelet-Les Halles" -> "Gare de Lyon";
     "Gare de Lyon" -> "Nation";
 
-#Rue Velane
+# Rue Velane
     edge [color=red];
     "Gare du Nord" -> "Châtelet-Les Halles";
     "Châtelet-Les Halles" -> "Saint-Michel-Notre-Dame";
@@ -41,8 +106,74 @@ digraph {
     "Port-Royal" -> "Denfert-Rochereau";
     "Denfert-Rochereau" -> "Cité Universitaire";
 
-#Rue Tourneurs
+# Rue Tourneurs
     edge [color=green];
     "Gare du Nord" -> "Châtelet-Les Halles";
     "Châtelet-Les Halles" -> "Gare de Lyon";
+
+# Rue Croix-Baragnon
+    edge [color=yellow];
+    "La Défense" -> "Esplanade de la Défense";
+    "Esplanade de la Défense" -> "Pont de Neuilly";
+    "Pont de Neuilly" -> "Les Sablons";
+    "Les Sablons" -> "Porte Maillot";
+    "Porte Maillot" -> "Argentine";
+    "Argentine" -> "Charles de Gaulle-Étoile";
+    "Charles de Gaulle-Étoile" -> "George V";
+    "George V" -> "Franklin D. Roosevelt";
+    "Franklin D. Roosevelt" -> "Champs-Élysées-Clemenceau";
+    "Champs-Élysées-Clemenceau" -> "Concorde";
+    "Concorde" -> "Tuileries";
+    "Tuileries" -> "Palais Royal-Musée du Louvre";
+    "Palais Royal-Musée du Louvre" -> "Louvre-Rivoli";
+    "Louvre-Rivoli" -> "Châtelet";
+    "Châtelet" -> "Hôtel de Ville";
+    "Hôtel de Ville" -> "Saint-Paul";
+    "Saint-Paul" -> "Bastille";
+    "Bastille" -> "Gare de Lyon";
+    "Gare de Lyon" -> "Reuilly-Diderot";
+    "Reuilly-Diderot" -> "Nation";
+    "Nation" -> "Porte de Vincennes";
+    "Porte de Vincennes" -> "Saint-Mandé";
+    "Saint-Mandé" -> "Bérault";
+    "Bérault" -> "Château de Vincennes";
+
+
+#Rue Genty-Magre
+    edge [color=purple];
+    "La Courneuve-8 Mai 1945" -> "Fort d'Aubervilliers";
+    "Fort d'Aubervilliers" -> "Aubervilliers-Pantin-Quatre";
+    "Aubervilliers-Pantin-Quatre" -> "Chemins";
+    "Chemins" -> "Porte de la Villette";
+    "Porte de la Villette" -> "Corentin Cariou";
+    "Corentin Cariou" -> "Crimée";
+    "Crimée" -> "Riquet";
+    "Riquet" -> "Stalingrad";
+    "Stalingrad" -> "Louis Blanc";
+    "Louis Blanc" -> "Château-Landon";
+    "Château-Landon" -> "Gare de l'Est";
+    "Gare de l'Est" -> "Poissonnière";
+    "Poissonnière" -> "Cadet";
+    "Cadet" -> "Le Peletier";
+    "Le Peletier" -> "Chaussée d'Antin-La Fayette";
+    "Chaussée d'Antin-La Fayette" -> "Opéra";
+    "Opéra" -> "Pyramides";
+    "Pyramides" -> "Palais Royal-Musée du Louvre";
+    "Palais Royal-Musée du Louvre" -> "Pont Neuf";
+    "Pont Neuf" -> "Châtelet";
+    "Châtelet" -> "Pont Marie";
+    "Pont Marie" -> "Sully-Morland";
+    "Sully-Morland" -> "Jussieu";
+    "Jussieu" -> "Place Monge";
+    "Place Monge" -> "Censier-Daubenton";
+    "Censier-Daubenton" -> "Les Gobelins";
+    "Les Gobelins" -> "Place d'Italie";
+    "Place d'Italie" -> "Tolbiac";
+    "Tolbiac" -> "Maison Blanche";
+    "Maison Blanche" -> "Porte d'Italie";
+    "Porte d'Italie" -> "Porte de Choisy";
+    "Porte de Choisy" -> "Porte d'Ivry";
+    "Porte d'Ivry" -> "Pierre et Marie Curie";
+    "Pierre et Marie Curie" -> "Mairie d'Ivry";
+    
 }
