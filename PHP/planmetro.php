@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Plan de Métro Paris</title>
+    <title>Plan de Rammassage des Poubelle</title>
     <style>
         body {
             background-color: white;
@@ -199,7 +199,7 @@
                     "Fonderie": {
                         "color": "#168133",
                         "stations": [
-                            {"name": "BOBIGNY_PABLO_PICASSO", "x": 1376, "y": 188},
+                            {"name": "BOBIGNY_PABLO_PICASSO", "x": 1425, "y": 242},
                             {"name": "BOBIGNY_PANTIN_RAYMOND_QUENEAU", "x": 1337, "y": 205},
                             {"name": "EGLISE_DE_PANTIN", "x": 1311, "y": 220},
                             {"name": "HOCHE", "x": 1274, "y": 231},
@@ -468,9 +468,56 @@
                             {"name": "OLYMPIADES", "x": 1065, "y": 616}
                         ]
                     },
-                    // Gestes
-                    // Daurade
-
+                    "Geste": {
+                        "color": "#111111",
+                        "stations": [
+                            {"name": "GARE_SAINT_DENIS", "x": 847, "y": 67},
+                            {"name": "THEATRE_GERARD_PHILIPE", "x": 897, "y": 116},
+                            {"name": "MARCHE_DE_SAINT_DENIS", "x": 935, "y": 110},
+                            {"name": "CIMETIERE_DE_SAINT_DENIS", "x": 974, "y": 94},
+                            {"name": "HOPITAL_DELAFONTAINE", "x": 1008, "y": 94},
+                            {"name": "COSMONAUTES", "x": 1057, "y": 94},
+                            {"name": "LA_COURNEUVE_SIX_ROUTES", "x": 1093, "y": 94},
+                            {"name": "HOTEL_DE_VILLE_DE_LA_COURNEUVE", "x": 1132, "y": 94},
+                            {"name": "STADE_GEO_ANDRE", "x": 1166, "y": 94},
+                            {"name": "DANTON", "x": 1196, "y": 94},
+                            {"name": "LA_COURNEUVE_8_MAI_1945", "x": 1239, "y": 94},
+                            {"name": "MAURICE_LACHATRE", "x": 1276, "y": 115},
+                            {"name": "DRANCY_AVENIR", "x": 1287, "y": 143},
+                            {"name": "HOPITAL_AVICIENNE", "x": 1305, "y": 166},
+                            {"name": "GASTON_ROULAUD", "x": 1342, "y": 182},
+                            {"name": "ESCADRILLE_NORMANDIE_NIEMEN", "x": 1378, "y": 179},
+                            {"name": "LA_FERME", "x": 1411, "y": 161},
+                            {"name": "LIBERATION", "x": 1426, "y": 185},
+                            {"name": "HOTEL_DE_VILLE_DE_BOBIGNY", "x": 1423, "y": 213},
+                            {"name": "BOBIGNY_PABLO_PICASSO", "x": 1425, "y": 242},
+                            {"name": "JEAN_ROSTAND", "x": 1427, "y": 264},
+                            {"name": "AUGUSTE_DELAUNE", "x": 1439, "y": 281},
+                            {"name": "PONT_DE_BONDY", "x": 1470, "y": 286},
+                            {"name": "PETIT_NOISY", "x": 1473, "y": 312},
+                            {"name": "NOiSY_LE_SEC", "x": 1473, "y": 340}
+                        ]
+                    },
+                    "Daurade": {
+                        "color": "#111111",
+                        "stations": [
+                            {"name": "LA_DEFENSE", "x": 212, "y": 235},
+                            {"name": "PUTEAUX", "x": 118, "y": 266},
+                            {"name": "BELVEDERE", "x": 96, "y": 305},
+                            {"name": "SURESNES_LONGCHAMP", "x": 95, "y": 357},
+                            {"name": "LES_COTEAUX", "x": 95, "y": 453},
+                            {"name": "LES_MILONS", "x": 95, "y": 516},
+                            {"name": "PARC_DE_SAINT_CLOUD", "x": 96, "y": 586},
+                            {"name": "MUSEE_DE_SEVRES", "x": 122, "y": 658},
+                            {"name": "BRIMBORION", "x": 164, "y": 680},
+                            {"name": "MEUDON_SUR_SEINE", "x": 204, "y": 679},
+                            {"name": "LES_MOULINEAUX", "x": 265, "y": 673},
+                            {"name": "JACQUES_HENRI_LARTIGUE", "x": 292, "y": 656},
+                            {"name": "ISSY_VAL_DE_SEINE", "x": 326, "y": 640},
+                            {"name": "BALARD", "x": 360, "y": 617},
+                            {"name": "PORTE_DE_VERSAILLES", "x": 452, "y": 630}
+                        ]
+                    },
                     "Bédelières": {
                         "color": "#999999",
                         "stations": [
@@ -631,7 +678,7 @@
             }
         }
 
-        function toggleBackground() {
+        function toggleBackground() {                   //********fonction de contruction de la map******
             showBackground = !showBackground;
             drawMap();
         }
@@ -657,7 +704,7 @@
             return null;
         }
 
-        canvas.addEventListener('mousemove', function(event) {
+        canvas.addEventListener('mousemove', function(event) {      //********fonction de contruction de la map******
             var rect = canvas.getBoundingClientRect();
             var x = (event.clientX - rect.left) / zoomLevel;
             var y = (event.clientY - rect.top) / zoomLevel;
@@ -700,7 +747,7 @@
             zoomIn();
         });
 
-        function copyToClipboard(text) {
+        function copyToClipboard(text) {                                //********fonction de contruction de la map******
             const textarea = document.createElement("textarea");
             textarea.value = text;
             document.body.appendChild(textarea);
@@ -710,7 +757,7 @@
         }
 
 
-document.addEventListener('keydown', function(event) {
+document.addEventListener('keydown', function(event) {                 //********fonction de contruction de la map******
     if (event.key === "c") {
         const textToCopy = mousePositionDiv.innerText;
         copyToClipboard(textToCopy);
