@@ -16,7 +16,7 @@
         canvas {
             border: 1.5px solid black;
         }
-        #mousePosition {
+        #mousePosition, #zoomLevel, #stationInfo {
             background-color: rgba(255, 255, 255, 0.8);
             padding: 5px;
             border: 1px solid black;
@@ -30,10 +30,22 @@
         button {
             margin: 0 5px;
         }
+        #stationInfo {
+            position: absolute;
+            left: 10px;
+            top: 50px;
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 200px;
+        }
     </style>
 </head>
 <body>
     <div id="mousePosition">Mouse Position: (x, y)</div>
+    <div id="zoomLevel">Zoom Level: 1</div>
+    <div id="stationInfo"></div>
     <canvas id="metroMap" width="1600" height="800"></canvas>
     <div id="controls">
         <button onclick="zoomIn()">Zoom In</button>
@@ -42,8 +54,10 @@
     </div>
     <script>
         var canvas = document.getElementById("metroMap");
-        var mousePositionDiv = document.getElementById("mousePosition");
         var ctx = canvas.getContext('2d');
+        var mousePositionDiv = document.getElementById("mousePosition");
+        var zoomLevelDiv = document.getElementById("zoomLevel");
+        var stationInfoDiv = document.getElementById("stationInfo");
 
         var zoomLevel = 1;
         var minZoom = 1;
@@ -51,7 +65,9 @@
         var zoomIncrement = 0.5;
         var offsetX = 0;
         var offsetY = 0;
-        var showBackground = true; // Variable to control background image
+        var isPanning = false;
+        var startX, startY;
+        var showBackground = true;
 
         var data = {
                 "lines": {
@@ -249,6 +265,7 @@
             if (zoomLevel < maxZoom) {
                 zoomLevel += zoomIncrement;
                 drawMap();
+                zoomLevelDiv.textContent = 'Zoom Level: ' + zoomLevel.toFixed(1);
             }
         }
 
@@ -256,6 +273,7 @@
             if (zoomLevel > minZoom) {
                 zoomLevel -= zoomIncrement;
                 drawMap();
+                zoomLevelDiv.textContent = 'Zoom Level: ' + zoomLevel.toFixed(1);
             }
         }
 
@@ -264,12 +282,45 @@
             drawMap();
         }
 
+        function getMousePosition(canvas, event) {
+            var rect = canvas.getBoundingClientRect();
+            return {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
+        }
+
         canvas.addEventListener('mousemove', function(event) {
             var rect = canvas.getBoundingClientRect();
             var x = event.clientX - rect.left;
             var y = event.clientY - rect.top;
             mousePositionDiv.innerHTML = 'Mouse Position: x= ' + Math.round(x) + ' y= ' + Math.round(y);
+
+            var mousePos = getMousePosition(canvas, event);
+            var stationInfo = getStationInfoAtPosition(mousePos.x, mousePos.y);
+            if (stationInfo) {
+                stationInfoDiv.innerHTML = '<strong>' + stationInfo.name + '</strong><br>' + 'Rues: ' + stationInfo.streets.join(', ') + '<br>' + 'Adjacents: ' + stationInfo.adjacent.join(', ');
+            } else {
+                stationInfoDiv.innerHTML = '';
+            }
         });
+
+        function getStationInfoAtPosition(mouseX, mouseY) {
+            for (var lineName in data.lines) {
+                var line = data.lines[lineName];
+                for (var i = 0; i < line.stations.length; i++) {
+                    var station = line.stations[i];
+                    var x = station.x * zoomLevel + offsetX;
+                    var y = station.y * zoomLevel + offsetY;
+                    var dx = mouseX - x;
+                    var dy = mouseY - y;
+                    if (Math.sqrt(dx * dx + dy * dy) < 10) {
+                        return station;
+                    }
+                }
+            }
+            return null;
+        }
 
         canvas.addEventListener('mousedown', function(event) {
             var rect = canvas.getBoundingClientRect();
