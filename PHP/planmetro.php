@@ -50,6 +50,8 @@
         <button onclick="toggleBackground()">Toggle Background</button>
     </div>
     <script>
+        var currentStreet = "Croix-Baragnon";               //AFFICHAGE RUE
+        var currentStation = "VICTOR_HUGO";
         var canvas = document.getElementById("metroMap");
         var mousePositionDiv = document.getElementById("mousePosition");
         var zoomLevelDiv = document.getElementById("zoomLevel");
@@ -612,10 +614,12 @@
             drawMap();
         };
 
-        function drawStation(x, y, text) {
+        function drawStation(x, y, text, lineName) {
             ctx.beginPath();
             ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
-            ctx.fillStyle = 'white';
+            if (text === currentStation) {
+                ctx.fillStyle = 'orange';}
+            ctx.fillStyle = currentStreet ? (lineName === currentStreet ? 'blue' : 'white') : 'white';
             ctx.fill();
 
             ctx.lineWidth = 2;
@@ -629,38 +633,52 @@
             }
         }
 
-        function drawLine(x1, y1, x2, y2, color) {
+        function drawLine(x1, y1, x2, y2, color, lineName) {
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
-            ctx.strokeStyle = color;
+            ctx.strokeStyle = currentStreet ? (lineName === currentStreet ? 'blue' : 'gray') : color;
             ctx.lineWidth = 4;
             ctx.stroke();
         }
 
         function drawMap() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.save();
-            ctx.scale(zoomLevel, zoomLevel);
-            ctx.translate(offsetX / zoomLevel, offsetY / zoomLevel);
-            
-            if (showBackground) {
-                ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.scale(zoomLevel, zoomLevel);
+    ctx.translate(offsetX / zoomLevel, offsetY / zoomLevel);
+
+    if (showBackground) {
+        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    }
+
+    Object.entries(data.lines).forEach(([lineName, line]) => {
+        if (lineName !== currentStreet) {
+            for (let i = 0; i < line.stations.length - 1; i++) {
+                var station1 = line.stations[i];
+                var station2 = line.stations[i + 1];
+                drawLine(station1.x, station1.y, station2.x, station2.y, line.color, lineName);
+                drawStation(station1.x, station1.y, station1.name, lineName);
             }
-
-            Object.entries(data.lines).forEach(([lineName, line]) => {
-                for (let i = 0; i < line.stations.length - 1; i++) {
-                    var station1 = line.stations[i];
-                    var station2 = line.stations[i + 1];
-                    drawLine(station1.x, station1.y, station2.x, station2.y, line.color);
-                    drawStation(station1.x, station1.y, station1.name);
-                }
-                var lastStation = line.stations[line.stations.length - 1];
-                drawStation(lastStation.x, lastStation.y, lastStation.name);
-            });
-
-            ctx.restore();
+            var lastStation = line.stations[line.stations.length - 1];
+            drawStation(lastStation.x, lastStation.y, lastStation.name, lineName);
         }
+    });
+
+    if (currentStreet) {
+        var currentLine = data.lines[currentStreet];
+        for (let i = 0; i < currentLine.stations.length - 1; i++) {
+            var station1 = currentLine.stations[i];
+            var station2 = currentLine.stations[i + 1];
+            drawLine(station1.x, station1.y, station2.x, station2.y, currentLine.color, currentStreet);
+            drawStation(station1.x, station1.y, station1.name, currentStreet);
+        }
+        var lastStation = currentLine.stations[currentLine.stations.length - 1];
+        drawStation(lastStation.x, lastStation.y, lastStation.name, currentStreet);
+    }
+
+    ctx.restore();
+}
 
         function zoomIn() {
             if (zoomLevel < maxZoom) {
