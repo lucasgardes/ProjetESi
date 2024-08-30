@@ -1,3 +1,12 @@
+<?php 
+session_start();
+if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
+  $logged = true;
+} else {
+  $logged = false;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,12 +28,12 @@
     <a class="w3-bar-item w3-button w3-padding-large w3-white">Home</a>
     <a href="#contact" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">Contact</a>
 
-    <?php include 'login.php';?>
+    <?php if (!$logged) : ?>
     <div class="w3-right w3-hide-small" id="login-signup-container">
         <a href="login.php" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Connexion</a>
         <a href="signup.php" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Inscription</a>
     </div>
-    <?php if ($logged) : ?>
+    <?php else : ?>
     <div id="user-dropdown" class="dropdown">
         <button class="dropbtn"><i class="fa fa-user"></i></button>
         <div class="dropdown-content">

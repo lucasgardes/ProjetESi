@@ -1,43 +1,40 @@
 <?php
+    include 'pdo.php';
+    session_start();
     $post = $_POST;
     $logged = false;
     if (isset($post) && !empty($post)) {
-    $firstname = $post['firstname'];
-    $lastname = $post['lastname'];
-    $email = $post['email'];
-    $password = $post['password'];
+        if (isset($post['firstname']) && isset($post['lastname'])) {
+            $firstname = $post['firstname'];
+            $lastname = $post['lastname'];
+        }
+        $email = $post['email'];
+        $password = $post['password'];
 
-    $servername = "localhost";
-    $username = "348216";
-    $password_bdd = "mdp4B2D2Pr0j€t";
-    $dbname = "mysql-projet-poubelle";
+        $servername = "mysql-projet-poubelle.alwaysdata.net";
+        $username = "348216";
+        $password_bdd = "mdp4B2D2Pr0j€t";
+        $dbname = "projet-poubelle_bdd";
 
-    $conn = new mysqli($servername, $username, $password_bdd, $dbname);
+        $conn = new mysqli($servername, $username, $password_bdd, $dbname);
 
-    if (!$conn->set_charset("utf8")) {
-        echo "Erreur lors du chargement du jeu de caractères utf8 : " . $conn->error;
-    } else {
-        echo "Jeu de caractères actuel : " . $conn->character_set_name();
+        if ($conn->connect_error) {
+            die("La connexion a échoué : " . $conn->connect_error);
+        }
+        $stmt = $pdo->prepare("SELECT id FROM client WHERE email = ? AND `password` = ?");
+        $stmt->execute([$email, $password]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!empty($result)) {
+            $_SESSION['user_id'] = $result['id'];
+            $_SESSION['email'] = $email;
+            $_SESSION['loggedin'] = true;
+            
+            header("Location: index.php");
+            exit;
+        }
+
+        $conn->close();
     }
-
-    if ($conn->connect_error) {
-        die("La connexion a échoué : " . $conn->connect_error);
-    }
-
-    $sql = "SELECT id
-            FROM client
-            WHERE email = " . $email . "
-            AND `password` = " . $password;
-    $result = $conn->query($sql);
-
-    if (!empty($result)) {
-        $logged = true;
-    } else {
-        $logged = false;
-    }
-
-    $conn->close();
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -50,7 +47,7 @@
     <body>
 
     <div class="login-container">
-        <form action="../PHP/index.php" method="post" class="login-form">
+        <form action="login.php" method="post" class="login-form">
             <h2>Connexion</h2>
             <div class="input-group">
                 <label for="email">Email</label>
