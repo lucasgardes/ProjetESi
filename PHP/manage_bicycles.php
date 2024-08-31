@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Gestion des Vélos</title>
+    <link rel="stylesheet" href="../CSS/manage_bicycles.css">
 </head>
 <body>
     <h1>Gestion des Vélos</h1>
