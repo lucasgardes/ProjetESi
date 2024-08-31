@@ -1,82 +1,107 @@
-/* Réinitialisation de base pour une cohérence entre les navigateurs */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* manage_bicycles.css */
 
+/* Style global */
 body {
-    font-family: 'Arial', sans-serif; /* Utilisez une police standard pour la compatibilité */
-    color: #333; /* Couleur de texte principale */
-    background-color: #f4f4f4; /* Couleur de fond pour tout le site */
-}
-
-header {
-    background-color: #4CAF50; /* Vert vif, comme dans la maquette */
-    color: white;
-    padding: 20px 40px;
-}
-
-header nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-nav ul {
-    list-style-type: none;
-    display: flex;
-}
-
-nav ul li {
-    margin-left: 20px;
-}
-
-nav ul li a {
-    color: white;
-    text-decoration: none;
-    font-size: 16px;
-}
-
-button {
-    background-color: #388E3C; /* Un vert légèrement plus foncé pour les boutons */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-button:hover {
-    background-color: #2E7D32; /* Un vert encore plus foncé pour l'effet hover */
-}
-
-/* Section 'About Our Service' */
-.about-section {
-    background-color: white;
-    padding: 40px;
-    margin-top: 20px;
-}
-
-.about-section h1 {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #f4f4f4;
     color: #333;
 }
 
-.about-section p {
-    font-size: 18px;
-    color: #666;
-    line-height: 1.6;
+
+.title {
+    color: #4CAF50;
+    text-align: center;
 }
 
-/* Adaptations responsives */
-@media (max-width: 768px) {
-    nav ul {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    nav ul li {
-        margin: 10px 0;
-    }
+/* Style du tableau */
+table {
+    width: 80%;
+    margin: 0 auto;
+    border-collapse: collapse;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
 }
+
+table th,
+table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Centrer les champs d'entrée */
+table td input[type="text"],
+table td input[type="number"] {
+    display: inline-block;
+    text-align: center;
+    margin: 0 auto;
+}
+
+/* Centrer les boutons */
+table td button {
+    display: inline-block;
+    margin: 0 auto;
+}
+
+th, td {
+    padding: 15px;
+    text-align: center;
+}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+    text-transform: uppercase;
+    font-weight: 500;
+    font-size: 14px;
+    border-bottom: 2px solid #4CAF50;
+}
+
+td {
+    border-bottom: 1px solid #ddd;
+}
+
+td input[type="text"],
+td input[type="number"] {
+    width: 80%;
+    padding: 8px;
+    margin: 5px 0;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    text-align: center;
+}
+
+/* Style des boutons */
+button {
+    padding: 10px 20px;
+    font-size: 14px;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button[name="update"] {
+    background-color: #4CAF50;
+    margin-right: 10px;
+}
+
+button[name="delete"] {
+    background-color: #f44336;
+}
+
+button[name="add"] {
+    background-color: #4CAF50;
+    width: 100%;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+

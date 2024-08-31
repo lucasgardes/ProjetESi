@@ -5,6 +5,23 @@ class Bicycle {
     // Utilisez la définition de la classe Bicycle précédemment fournie ici
 }
 
+session_start();
+if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
+    $stmt = $pdo->prepare("SELECT `admin` FROM client WHERE id = ?");
+    $stmt->execute([$_SESSION['id']]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$result['admin']) {
+        header("Location: index.php");
+    }
+  $logged = true;
+} else {
+    header("Location: index.php");
+}
+
+$stmt = $pdo->prepare("SELECT * FROM stops");
+$stmt->execute();
+$stops = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 function fetchAllBicycles($pdo) {
     $stmt = $pdo->query("SELECT * FROM bicycles");
     return $stmt->fetchAll(PDO::FETCH_CLASS, 'Bicycle');
@@ -21,17 +38,17 @@ foreach ($bicycles as $bicycle) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Gérer la logique de mise à jour ici
     if (isset($_POST['update'])) {
-        $stmt = $pdo->prepare("SELECT id FROM stops WHERE name = ?");
-        $stmt->execute([$_POST['position']]);
-        $stop_id = $stmt->fetchColumn();
         $stmt = $pdo->prepare("UPDATE bicycles SET stop_id = ?, autonomy = ?, `load` = ? WHERE id = ?");
-        $stmt->execute([$stop_id, $_POST['autonomy'], $_POST['load'], $_POST['id']]);
+        $stmt->execute([$_POST['position'], $_POST['autonomy'], $_POST['load'], $_POST['id']]);
+        header("Location: manage_bicycles.php");
     } elseif (isset($_POST['add'])) {
         $stmt = $pdo->prepare("INSERT INTO bicycles (stop_id, autonomy, `load`) VALUES (121, 50, 0)");
         $stmt->execute();
+        header("Location: manage_bicycles.php");
     } elseif (isset($_POST['delete'])) {
         $stmt = $pdo->prepare("DELETE FROM bicycles WHERE id = ?");
         $stmt->execute([$_POST['id']]);
+        header("Location: manage_bicycles.php");
     }
 }
 ?>
@@ -41,43 +58,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Gestion des Vélos</title>
+    <!-- Intégration de Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../CSS/manage_bicycles.css">
 </head>
 <body>
-    <h1>Gestion des Vélos</h1>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Position</th>
-                <th>Autonomie</th>
-                <th>Charge Actuelle</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($bicycles as $bicycle): ?>
-            <tr>
-                <form method="post">
-                    <td><?= $bicycle->id ?></td>
-                    <td><input type="text" name="position" value="<?= $currentStopName[$bicycle->id] ?>"></td>
-                    <td><input type="number" name="autonomy" value="<?= $bicycle->autonomy ?>"></td>
-                    <td><input type="number" name="load" value="<?= $bicycle->load ?>"></td>
-                    <td>
-                        <input type="hidden" name="id" value="<?= $bicycle->id ?>">
-                        <button type="submit" name="update">Mettre à jour</button>
-                        <button type="submit" name="delete">Supprimer</button>
-                    </td>
-                </form>
-            </tr>
-            <?php endforeach; ?>
-            <tr>
-                <form method="post">
-                    <td>Nouveau</td>
-                    <td><button type="submit" name="add">Ajouter Vélo</button></td>
-                </form>
-            </tr>
-        </tbody>
-    </table>
+    <?php include 'header.php';?>
+    <div class="container pt-5">
+        <h1 class="text-center text-success title">Gestion des Vélos</h1>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Position</th>
+                        <th>Autonomie</th>
+                        <th>Charge Actuelle</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($bicycles as $bicycle): ?>
+                        <tr>
+                        <form method="post">
+                            <td><?= $bicycle->id ?></td>
+                            <td>
+                                <select class="form-control form-control-select" name="position">
+                                    <?php foreach ($stops as $stop): ?>
+                                        <option value="<?= $stop['id'] ?>" <?= $currentStopName[$bicycle->id] == $stop['name'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($stop['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <td><input type="number" class="form-control" name="autonomy" value="<?= $bicycle->autonomy ?>"></td>
+                            <td><input type="number" class="form-control" name="load" value="<?= $bicycle->load ?>"></td>
+                            <td>
+                                <input type="hidden" name="id" value="<?= $bicycle->id ?>">
+                                <button type="submit" class="btn btn-success btn-sm" name="update">Mettre à jour</button>
+                                <button type="submit" class="btn btn-danger btn-sm" name="delete">Supprimer</button>
+                            </td>
+                        </form>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <form method="post">
+                <button type="submit" class="btn btn-primary btn-block" name="add">Ajouter un nouveau Vélo</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Intégration de jQuery et Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="../JS/manage_bicycles.js"></script>
 </body>
 </html>
