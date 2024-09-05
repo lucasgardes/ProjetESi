@@ -1,12 +1,14 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require 'pdo.php';
-$_SESSION['id'] = 1;
-if (!isset($_SESSION['id'])) {
+$_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
+if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
-$userId = $_SESSION['id'];
+$userId = $_SESSION['user_id'];
 
 $stmt = $pdo->prepare("SELECT ph.id
 FROM bicycles b
@@ -51,11 +53,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['start_path'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord utilisateur</title>
     <link rel="stylesheet" href="../CSS/user_dashboard.css">
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css"/>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/dataTables.bootstrap4.min.css"/>
 </head>
 <body>
+    <?php include 'header.php';?>
     <div class="container mt-5">
         <h2>Tableau de bord utilisateur</h2>
         <?php
@@ -97,7 +99,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['start_path'])) {
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap4.min.js"></script>
     <script src="../JS/user_dashboard.js"></script>

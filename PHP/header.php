@@ -39,7 +39,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
           <i class="fa fa-user"></i> Mon Compte
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-          <a class="dropdown-item" href="profile.php">Profil</a>
+          <a class="dropdown-item" href="edit_profile.php">Profil</a>
           <a class="dropdown-item" href="settings.php">Paramètres</a>
           <a class="dropdown-item" href="logout.php">Déconnexion</a>
         </div>
