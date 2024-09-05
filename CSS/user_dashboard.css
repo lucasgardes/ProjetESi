@@ -1,0 +1,29 @@
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select {
+    color: #495057; /* Darker input text for visibility */
+    padding: .375rem .75rem; /* Bootstrap's input padding */
+    border-radius: .25rem; /* Bootstrap's border radius */
+    border: 1px solid #ced4da; /* Bootstrap's input border */
+}
+
+.dataTables_wrapper .dataTables_length select {
+    width: 60px !important;
+}
+
+.table.dataTable {
+    color: #343a40; /* Dark text for better readability */
+    border-collapse: separate; /* Ensures borders are nicely separated */
+}
+
+.table thead th {
+    background-color: #4caf50; /* Green background for headers */
+    color: #343a40; /* White text for headers */
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    margin: 0 .25rem; /* Space between buttons */
+    border-radius: .25rem; /* Rounded corners like Bootstrap */
+    background-color: #f8f9fa; /* Light background for buttons */
+    color: #007bff; /* Bootstrap primary blue for button text */
+    padding: 0px 0px 0px 1px !important;
+}
