@@ -1,0 +1,7 @@
+a {
+    text-decoration: none !important;
+}
+
+.navbar-gradient {
+    background: linear-gradient(90deg, #4CAF50 0%, #3e8e41 100%) !important;
+}
