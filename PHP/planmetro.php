@@ -40,6 +40,28 @@
     </style>
 </head>
 <body>
+    <?php
+        require 'pdo.php';
+        $_SESSION['id'] = 1;
+        if (!isset($_SESSION['id'])) {
+            header("Location: login.php");
+            exit;
+        }
+
+        $stmt = $pdo->prepare("SELECT s.* FROM stops s");
+        $stmt->execute();
+        $stops = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmt = $pdo->prepare("SELECT s.* FROM streets s");
+        $stmt->execute();
+        $streets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmt = $pdo->prepare("SELECT s.name, b.*
+        FROM bicycles b
+        LEFT JOIN stops s ON s.id = b.stop_id");
+        $stmt->execute();
+        $bicycles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    ?>
     <div id="mousePosition">Mouse Position: (x, y)</div>
     <div id="zoomLevel">Zoom Level: 1</div>
     <div id="stationInfo">Station Info: </div>
@@ -50,6 +72,10 @@
         <button onclick="toggleBackground()">Toggle Background</button>
     </div>
     <script>
+        var stopsData = <?php echo json_encode($stops); ?>;
+        var streetsData = <?php echo json_encode($streets); ?>;
+        var bicyclesData = <?php echo json_encode($bicycles); ?>;
+        var isPanning = false;
         var currentStreet = "Croix-Baragnon";               //AFFICHAGE RUE
         var currentStation = "VICTOR_HUGO";
         var canvas = document.getElementById("metroMap");
@@ -211,7 +237,7 @@
                             {"name": "JAURES", "x": 1092, "y": 260},
                             {"name": "STALINGRAD", "x": 1058, "y": 247},
                             {"name": "GARE_DU_NORD", "x": 956, "y": 259},
-                            {"name": "JACQUES_BONSERGENTE", "x": 994, "y": 321},
+                            {"name": "JACQUES_BONSERGENT", "x": 994, "y": 321},
                             {"name": "REPUBLIQUE", "x": 1025, "y": 348},
                             {"name": "OBERKAMPF", "x": 1048, "y": 367},
                             {"name": "RICHARD_LENOIR", "x": 1072, "y": 408},
@@ -448,7 +474,7 @@
                             {"name": "DUROC", "x": 589, "y": 523},
                             {"name": "MONTPARNASSE_BIENVENUE", "x": 696, "y": 545},
                             {"name": "GAITE", "x": 696, "y": 545},
-                            {"name": "PERNTY", "x": 672, "y": 595},
+                            {"name": "PERNETY", "x": 672, "y": 595},
                             {"name": "PLAISANCE", "x": 636, "y": 612},
                             {"name": "PORTE_DE_VANVES", "x": 593, "y": 637},
                             {"name": "MALAKOFF_PLATEAU_DE_VANVES", "x": 556, "y": 652},
@@ -497,7 +523,7 @@
                             {"name": "AUGUSTE_DELAUNE", "x": 1439, "y": 281},
                             {"name": "PONT_DE_BONDY", "x": 1470, "y": 286},
                             {"name": "PETIT_NOISY", "x": 1473, "y": 312},
-                            {"name": "NOiSY_LE_SEC", "x": 1473, "y": 340}
+                            {"name": "NOISY_LE_SEC", "x": 1473, "y": 340}
                         ]
                     },
                     "Daurade": {
@@ -607,19 +633,91 @@
             };
 
 
-        var backgroundImage = new Image();
-        backgroundImage.src = "Plan-Metro.1669996027.webp";
+        // var backgroundImage = new Image();
+        // backgroundImage.src = "Plan-Metro.1669996027.webp";
 
-        backgroundImage.onload = function() {
-            drawMap();
-        };
+        // backgroundImage.onload = function() {
+        //     drawMap();
+        // };
 
-        function drawStation(x, y, text, lineName) {
+        function updateAllData() {
+            fetch('get_all_data.php')
+                .then(response => response.json())
+                .then(newData => {
+                    stopsData = newData.stops;     // Remplacer les données des arrêts
+                    streetsData = newData.streets; // Remplacer les données des rues
+                    bicyclesData = newData.bicycles; // Remplacer les données des vélos
+                    drawMap();  // Redessiner la carte avec les nouvelles données
+                })
+                .catch(error => console.error('Erreur lors de la mise à jour des données:', error));
+        }
+
+        function getStationByName(stationName) {
+            for (const line of Object.values(data.lines)) {
+                for (const station of line.stations) {
+                    if (station.name === stationName) {
+                        return station;
+                    }
+                }
+            }
+            return null;
+        }
+
+        function getLineByStation(station) {
+            for (const [lineName, line] of Object.entries(data.lines)) {
+                if (line.stations.some(s => s.name === station.name)) {
+                    return lineName;
+                }
+            }
+            return null;
+        }
+
+        // Appeler la fonction toutes les 30 secondes
+        setInterval(updateAllData, 30000);
+        updateAllData();
+
+        function getBicycleInfo(bicycle) {
+            return `Bicycle Info: ID ${bicycle.id}, Autonomy: ${bicycle.autonomy}, load: ${bicycle.load}, itineraire: ${bicycle.path_id}`;
+        }
+
+        function getBicycleAt(x, y) {
+            for (const bike of bicyclesData) {
+                const stopNameFormatted = bike.name;
+
+                // Trouver la station associée à l'arrêt du vélo
+                let stationFound = null;
+                Object.entries(data.lines).forEach(([lineName, line]) => {
+                    const station = line.stations.find(s => s.name === stopNameFormatted);
+                    if (station) {
+                        stationFound = station;
+                    }
+                });
+
+                // Si la station est trouvée, vérifier si la souris est proche du vélo
+                if (stationFound) {
+                    const dx = x - stationFound.x;
+                    const dy = y - stationFound.y;
+                    if (Math.sqrt(dx * dx + dy * dy) < 10) {
+                        return bike;  // Retourner les informations du vélo si la souris est proche
+                    }
+                }
+            }
+            return null;
+        }
+
+        function drawStation(x, y, text, lineName, empty) {
             ctx.beginPath();
             ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
+
             if (text === currentStation) {
-                ctx.fillStyle = 'orange';}
+                ctx.fillStyle = 'orange';
+            }
             ctx.fillStyle = currentStreet ? (lineName === currentStreet ? 'blue' : 'white') : 'white';
+            if (empty == 1) {
+                ctx.fillStyle = 'green'; // Déchets ramassés
+            } else {
+                ctx.fillStyle = 'red'; // Déchets non ramassés
+            }
             ctx.fill();
 
             ctx.lineWidth = 2;
@@ -633,52 +731,99 @@
             }
         }
 
-        function drawLine(x1, y1, x2, y2, color, lineName) {
+        function drawLine(x1, y1, x2, y2, color, lineName, empty) {
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
             ctx.strokeStyle = currentStreet ? (lineName === currentStreet ? 'blue' : 'gray') : color;
+            if (empty == 1) {
+                ctx.strokeStyle = 'green'; // Déchets ramassés
+            }
             ctx.lineWidth = 4;
             ctx.stroke();
         }
 
+        function drawBicycle(x, y) {
+            ctx.font = '50px Arial'; // Définissez la taille de l'emoji
+            ctx.textAlign = 'center'; // Centrez l'emoji sur le point
+            ctx.textBaseline = 'middle'; // Centrez également verticalement
+            ctx.fillText('🚲', x, y); // Dessinez l'emoji vélo à l'emplacement donné
+        }
+
         function drawMap() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.scale(zoomLevel, zoomLevel);
-    ctx.translate(offsetX / zoomLevel, offsetY / zoomLevel);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.scale(zoomLevel, zoomLevel);
+            ctx.translate(offsetX / zoomLevel, offsetY / zoomLevel);
 
-    if (showBackground) {
-        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-    }
+            // if (showBackground) {
+            //     ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+            // }
 
-    Object.entries(data.lines).forEach(([lineName, line]) => {
-        if (lineName !== currentStreet) {
-            for (let i = 0; i < line.stations.length - 1; i++) {
-                var station1 = line.stations[i];
-                var station2 = line.stations[i + 1];
-                drawLine(station1.x, station1.y, station2.x, station2.y, line.color, lineName);
-                drawStation(station1.x, station1.y, station1.name, lineName);
+            Object.entries(data.lines).forEach(([lineName, line]) => {
+                var lineNameDB = lineName.toUpperCase().replace(/[- ]/g, '_');
+                if (lineName !== currentStreet) {
+                    for (let i = 0; i < line.stations.length - 1; i++) {
+                        var station1 = line.stations[i];
+                        var station2 = line.stations[i + 1];
+                        var stop = stopsData.find(s => s.name === station1.name);
+                        var emptyStopStatus = stop ? stop.empty : 0;
+                        var street = streetsData.find(s => s.name === lineNameDB);
+                        var emptyStreetStatus = street ? street.empty : 0;
+                        drawLine(station1.x, station1.y, station2.x, station2.y, line.color, lineName, emptyStreetStatus);
+                        drawStation(station1.x, station1.y, station1.name, lineName, emptyStopStatus);
+                    }
+                    var lastStation = line.stations[line.stations.length - 1];
+                    var stop = stopsData.find(s => s.name === lastStation.name);
+                    var emptyStopStatus = stop ? stop.empty : 0;
+                    drawStation(lastStation.x, lastStation.y, lastStation.name, lineName, emptyStopStatus);
+                }
+            });
+
+            bicyclesData.forEach(bike => {
+                let stationFound = null;
+                Object.entries(data.lines).forEach(([lineName, line]) => {
+                    const station = line.stations.find(s => s.name.toUpperCase().replace(/[- ]/g, '_') === bike.name);
+                    if (station) {
+                        stationFound = station;
+                    }
+                });
+
+                if (stationFound) {
+                    drawBicycle(stationFound.x, stationFound.y);
+                } else {
+                    console.error('Station non trouvée pour le vélo : ', bike.name);
+                }
+            });
+
+            ctx.restore();
+
+
+            if (currentStreet) {
+                var currentLine = data.lines[currentStreet];
+                for (let i = 0; i < currentLine.stations.length - 1; i++) {
+                    var station1 = currentLine.stations[i];
+                    var station2 = currentLine.stations[i + 1];
+                    var stop = stopsData.find(s => s.name === station1.name);
+                    var emptyStopStatus = stop ? stop.empty : 0;
+                    if (currentStreet.name) {
+                        var currentStreetNameBD = currentStreet.name.toUpperCase().replace(/[- ]/g, '_');
+                        var street = streetsData.find(s => s.name === currentStreetNameBD);
+                    } else {
+                        var street = streetsData.find(s => s.name === currentStreet.name);
+                    }
+                    var emptyStreetStatus = street ? street.empty : 0;
+                    drawLine(station1.x, station1.y, station2.x, station2.y, currentLine.color, currentStreet, emptyStreetStatus);
+                    drawStation(station1.x, station1.y, station1.name, currentStreet, emptyStopStatus);
+                }
+                var lastStation = currentLine.stations[currentLine.stations.length - 1];
+                var stop = stopsData.find(s => s.name === lastStation.name);
+                var emptyStatus = stop ? stop.empty : 0;
+                drawStation(lastStation.x, lastStation.y, lastStation.name, currentStreet, emptyStopStatus);
             }
-            var lastStation = line.stations[line.stations.length - 1];
-            drawStation(lastStation.x, lastStation.y, lastStation.name, lineName);
-        }
-    });
 
-    if (currentStreet) {
-        var currentLine = data.lines[currentStreet];
-        for (let i = 0; i < currentLine.stations.length - 1; i++) {
-            var station1 = currentLine.stations[i];
-            var station2 = currentLine.stations[i + 1];
-            drawLine(station1.x, station1.y, station2.x, station2.y, currentLine.color, currentStreet);
-            drawStation(station1.x, station1.y, station1.name, currentStreet);
+            ctx.restore();
         }
-        var lastStation = currentLine.stations[currentLine.stations.length - 1];
-        drawStation(lastStation.x, lastStation.y, lastStation.name, currentStreet);
-    }
-
-    ctx.restore();
-}
 
         function zoomIn() {
             if (zoomLevel < maxZoom) {
@@ -706,7 +851,9 @@
             const index = line.stations.findIndex(station => station.name === stationName);
             const previousStation = index > 0 ? line.stations[index - 1].name : "None";
             const nextStation = index < line.stations.length - 1 ? line.stations[index + 1].name : "None";
-            return `Station: ${stationName}\nRue: ${lineName}\nPrécédent: ${previousStation}\nSuivant: ${nextStation}`;
+            const stop = stopsData.find(s => s.name === stationName);
+            const emptyStatus = stop ? (stop.empty == 1 ? "Déchets ramassés" : "Déchets non ramassés") : "Information indisponible";
+            return `Station: ${stationName}\nRue: ${lineName}\nPrécédent: ${previousStation}\nSuivant: ${nextStation}\nÉtat: ${emptyStatus}`;
         }
 
         function getStationAt(x, y) {
@@ -729,11 +876,21 @@
             //mousePositionDiv.innerHTML = 'Mouse Position: x= ' + Math.round(x) + ' y= ' + Math.round(y);
             mousePositionDiv.innerHTML = '"x": ' + Math.round(x) + ', "y": ' + Math.round(y);
             var stationInfo = getStationAt(x - offsetX / zoomLevel, y - offsetY / zoomLevel);
+            var bicycleInfo = getBicycleAt(x - offsetX / zoomLevel, y - offsetY / zoomLevel);
+
+            let infoText = '';
             if (stationInfo) {
-                const infoText = getStationInfo(stationInfo.station.name, stationInfo.lineName);
-                stationInfoDiv.innerText = infoText;
-            } else {
+                infoText += getStationInfo(stationInfo.station.name, stationInfo.lineName);  // Affiche les informations de la station
+            }
+            
+            if (bicycleInfo) {
+                infoText += '\n\n' + getBicycleInfo(bicycleInfo);  // Ajoute les informations du vélo à la suite
+            }
+
+            if (!stationInfo && !bicycleInfo) {
                 stationInfoDiv.innerText = 'Station Info:';
+            } else {
+                stationInfoDiv.innerText = infoText;
             }
         });
 
