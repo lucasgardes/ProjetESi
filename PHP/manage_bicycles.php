@@ -4,18 +4,22 @@ require 'pdo.php'; // Assurez-vous que ce fichier contient la connexion à la ba
 class Bicycle {
     // Utilisez la définition de la classe Bicycle précédemment fournie ici
 }
-
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
 if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
     $stmt = $pdo->prepare("SELECT `admin` FROM client WHERE id = ?");
-    $stmt->execute([$_SESSION['id']]);
+    $stmt->execute([$_SESSION['user_id']]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$result['admin']) {
-        header("Location: index.php");
+        header("Location: login.php");
+        exit;
     }
   $logged = true;
 } else {
-    header("Location: index.php");
+    header("Location: login.php");
+    exit;
 }
 
 $stmt = $pdo->prepare("SELECT * FROM stops");
@@ -59,7 +63,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title>Gestion des Vélos</title>
     <!-- Intégration de Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../CSS/manage_bicycles.css">
 </head>
@@ -113,8 +116,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Intégration de jQuery et Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="../JS/manage_bicycles.js"></script>
 </body>
 </html>
