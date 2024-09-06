@@ -3,47 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Plan de Rammassage des Poubelle</title>
-    <style>
-        body {
-            background-color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            flex-direction: column;
-            position: relative;
-        }
-        canvas {
-            border: 1.5px solid black;
-        }
-        #mousePosition, #zoomLevel, #stationInfo {
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 5px;
-            border: 1px solid black;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        #stationInfo {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        #controls {
-            margin-top: 10px;
-        }
-        button {
-            margin: 0 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="../CSS/planmetro.css">
 </head>
 <body>
+    <?php include 'header.php';?>
     <?php
         require 'pdo.php';
-        $_SESSION['id'] = 1;
-        if (!isset($_SESSION['id'])) {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
+        if (!isset($_SESSION['user_id'])) {
             header("Location: login.php");
             exit;
         }

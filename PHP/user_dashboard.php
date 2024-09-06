@@ -22,7 +22,6 @@ if (!is_null($assignedPathInfo['id'])) {
     exit;
 }
 
-
 $stmt = $pdo->query("SELECT p.id, s1.name AS stop1Name, s2.name AS stop2Name, s3.name AS stop3Name, s4.name AS stop4Name, p.distance
 FROM paths p
 LEFT JOIN stops s1 ON s1.id = p.start_stop_id
@@ -44,7 +43,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['start_path'])) {
     header("Location: user_dashboard.php");
     exit;
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -52,9 +50,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['start_path'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord utilisateur</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.22/css/dataTables.bootstrap5.min.css"/>
     <link rel="stylesheet" href="../CSS/user_dashboard.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css"/>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/dataTables.bootstrap4.min.css"/>
 </head>
 <body>
     <?php include 'header.php';?>
@@ -67,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['start_path'])) {
         }
         ?>
         <h3>Trajets disponibles</h3>
-        <table class="table cell-border">
+        <table id="pathsTable" class="table table-secondary table-striped table-bordered">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -97,12 +94,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['start_path'])) {
         </table>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap5.min.js"></script>
     <script src="../JS/user_dashboard.js"></script>
+
+    <script>
+    // Activer DataTables
+    $(document).ready(function() {
+        $('#pathsTable').DataTable();
+    });
+    </script>
 </body>
 </html>
-
-<script>

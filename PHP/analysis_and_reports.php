@@ -35,7 +35,7 @@ $frequentPaths = $stmt->fetchAll();
     <?php include 'header.php';?>
     <div class="container mt-5">
         <h2>Statistiques de Performance des Vélos</h2>
-        <table class="table table-bordered">
+        <table class="table table-secondary table-striped table-bordered">
             <thead class="thead-light">
                 <tr>
                     <th>ID du Vélo</th>
@@ -59,7 +59,7 @@ $frequentPaths = $stmt->fetchAll();
         </table>
 
         <h2>Itinéraires les Plus Fréquentés</h2>
-        <table class="table table-bordered">
+        <table class="table table-secondary table-striped table-bordered">
             <thead class="thead-dark">
                 <tr>
                     <th>ID de l'Itinéraire</th>

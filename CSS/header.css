@@ -5,3 +5,16 @@ a {
 .navbar-gradient {
     background: linear-gradient(90deg, #4CAF50 0%, #3e8e41 100%) !important;
 }
+
+.navbar-brand {
+    width: 70px;
+}
+
+.logo {
+    width: -webkit-fill-available;
+}
+
+.dropdown-item:hover {
+    background-color: #4CAF50;
+    color: white;
+}
