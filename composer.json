@@ -1,5 +1,6 @@
 {
     "require": {
-        "react/event-loop": "^1.5"
+        "react/event-loop": "^1.5",
+        "react/promise": "^3.2"
     }
 }

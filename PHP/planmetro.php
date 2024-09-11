@@ -31,9 +31,23 @@
         LEFT JOIN stops s ON s.id = b.stop_id");
         $stmt->execute();
         $bicycles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['updateWinter'])) {
+            $winterStatus = isset($_POST['winter']) ? 1 : 0;
+            $stmt = $pdo->prepare("UPDATE bicycles SET winter = ?");
+            $success = $stmt->execute([$winterStatus]);
+        }
+        $stmt = $pdo->prepare("SELECT winter FROM bicycles WHERE id = 1");
+        $stmt->execute();
+        $currentWinterStatus = $stmt->fetchColumn();
     ?>
     <div id="mousePosition">Mouse Position: (x, y)</div>
     <div id="zoomLevel">Zoom Level: 1</div>
+    <form method="post">
+        <label for="winterToggle">Winter Mode:</label>
+        <input type="checkbox" id="winterToggle" name="winter" value="1" <?= $currentWinterStatus ? 'checked' : '' ?>>
+        <button type="submit" name="updateWinter">Update</button>
+    </form>
     <div id="stationInfo">Station Info: </div>
     <canvas id="metroMap" width="1600" height="800"></canvas>
     <div id="controls">

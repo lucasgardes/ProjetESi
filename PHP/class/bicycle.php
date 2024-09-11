@@ -1,4 +1,6 @@
 <?php
+use React\EventLoop\Loop;
+use React\Promise\Promise;
 include 'pdo.php';
 class Bicycle {
     public $id;
@@ -9,6 +11,7 @@ class Bicycle {
     public $picking = false;
     public $returnToBase = false;
     public $baseLocation = 'PORTE_D_IVRY';
+    public $isWinter = false;
 
 
     private $pdo;
@@ -21,15 +24,21 @@ class Bicycle {
         $this->loadFromDB();
     }
 
+    private function applyWinterAutonomyReduction() {
+        if ($this->isWinter) {
+            $this->autonomy = $this->autonomy * 0.9; // Reduce autonomy by 10%
+        }
+    }
 
     private function loadFromDB() {
-        $stmt = $this->pdo->prepare("SELECT autonomy, `load`, s.name as position FROM bicycles LEFT JOIN stops s ON s.id = bicycles.stop_id WHERE bicycles.id = ?");
+        $stmt = $this->pdo->prepare("SELECT autonomy, `load`, s.name as position, winter FROM bicycles LEFT JOIN stops s ON s.id = bicycles.stop_id WHERE bicycles.id = ?");
         $stmt->execute([$this->id]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($data) {
             $this->autonomy = $data['autonomy'];
             $this->currentLoad = $data['load'];
             $this->position = $data['position'];
+            $this->isWinter = $data['winter'];
         }
     }
 
@@ -42,11 +51,25 @@ class Bicycle {
         $stmt->execute([$this->autonomy, $this->currentLoad, $data['id'], $this->id]);
     }
 
+    public function updateStopLoad() {
+        $stmt = $this->pdo->prepare("SELECT s.id FROM stops s WHERE s.name = ?");
+        $stmt->execute([$this->position]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $this->pdo->prepare("UPDATE stops SET `empty` = 1 WHERE id = ?");
+        $stmt->execute([$data['id']]);
+    }
+
+    public function updatePath() {
+        $stmt = $this->pdo->prepare("UPDATE bicycles SET path_id = NULL WHERE id = ?");
+        $stmt->execute([$this->id]);
+    }
+
 
     public function updatePosition($newPosition) {
         $this->position = $newPosition;
         if ($this->position == $this->baseLocation) {
             $this->autonomy = 50;
+            $this->applyWinterAutonomyReduction();
         }
         $this->saveToDB();
         echo "\nBicycle " . $this->id . "On " . $this->position;
@@ -61,6 +84,7 @@ class Bicycle {
             echo "\nBicycle " . $this->id . "emptying load";
         } else {
             $this->currentLoad += 50;
+            $this->updateStopLoad();
             echo "\nBicycle " . $this->id . "picking, new load : " . $this->currentLoad;
         }
         $this->saveToDB();
@@ -88,47 +112,19 @@ class Bicycle {
         $previous = [];
         $queue = [];
 
-
-
-
-
-
-
-
         foreach ($graph as $node => $neighbors) {
             $distances[$node] = INF;
             $previous[$node] = null;
             $queue[$node] = INF;
         }
 
-
-
-
-
-
-
-
         $distances[$start] = 0;
         $queue[$start] = 0;
-
-
-
-
-
-
-
 
         while (!empty($queue)) {
             // Get the node with the smallest distance
             $minNode = array_search(min($queue), $queue);
             unset($queue[$minNode]);
-
-
-
-
-
-
-
 
             if ($minNode === $end) {
                 break;
@@ -156,86 +152,55 @@ class Bicycle {
             array_unshift($path, $start);
         }
 
-
-
-
-
-
-
-
         return $path;
     }
 
 
     public function moveToDestination($destination, $graph, $picking = false, $path = null) {
-        if (ctype_digit($destination)) {
-            $stmt = $this->pdo->prepare("SELECT s.name FROM stops s WHERE s.id = ?");
-            $stmt->execute([$destination]);
-            $data = $stmt->fetch(PDO::FETCH_ASSOC);
-            $destination = $data['name'];
-        }
-        if ($picking) {
-            $this->picking = true;
-        } else {
-            $this->picking = false;
-        }
-        if (is_null($path)) {
-            $path = $this->determinPathToDestination($graph, $this->position, $destination);
-        } else {
-            $stopIds[] = $path['start_stop_id'];
-            if (isset($path['stop2_id'])) {
-                $stopIds[] = $path['stop2_id'];
+        return new Promise(function ($resolve) use ($destination, $graph, $picking, $path) {
+            $loop = Loop::get();
+    
+            if (ctype_digit($destination)) {
+                $stmt = $this->pdo->prepare("SELECT s.name FROM stops s WHERE s.id = ?");
+                $stmt->execute([$destination]);
+                $data = $stmt->fetch(PDO::FETCH_ASSOC);
+                $destination = $data['name'];
             }
-            if (isset($path['stop3_id'])) {
-                $stopIds[] = $path['stop3_id'];
+    
+            if ($picking) {
+                $this->picking = true;
+            } else {
+                $this->picking = false;
             }
-
-
-            if (isset($path['stop4_id'])) {
-                $stopIds[] = $path['stop4_id'];
+    
+            if (is_null($path)) {
+                $path = $this->determinPathToDestination($graph, $this->position, $destination);
             }
+    
+            $this->executeNextMove($graph, $path, $destination, 1, $resolve);
+        });
+    }
 
-            $placeholders = str_repeat('?,', count($stopIds) - 1) . '?';
-            $query = "SELECT id, name FROM stops WHERE id IN ($placeholders)";
-
-            // Exécuter la requête
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute($stopIds);
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $stopNamesMap = [];
-            foreach ($results as $row) {
-                $stopNamesMap[$row['id']] = $row['name'];
-            }
-
-            $stopsNames = [];
-            // Remplir le tableau $stopsNames avec les noms correspondants
-            foreach ($stopIds as $id) {
-                $stopsNames[] = $stopNamesMap[$id];
-            }
-            $path = $stopsNames;
-        }
-        $i = 1;
-        if ($this->picking) {
-            $this->updateLoad();
-        }
-        if (!$this->returnToBase) {
-            while ($this->position != $destination && $this->autonomy > 0 && !$this->returnToBase) {
-                if (isset($path[$i])) {
-                    $this->moveToNextStop($graph, $path[$i]);
-                }
-                $i++;
+    public function executeNextMove($graph, $path, $destination, $i, $resolve) {
+        $loop = Loop::get();
+    
+        if ($this->position != $destination && $this->autonomy > 0) {
+            if (isset($path[$i])) {
+                $nextStop = $path[$i];
+    
+                $loop->addTimer(3, function () use ($graph, $path, $destination, $nextStop, $i, $resolve) {
+                    $this->moveToNextStop($graph, $nextStop);
+    
+                    // Continue to the next stop
+                    $this->executeNextMove($graph, $path, $destination, $i + 1, $resolve);
+                });
             }
         } else {
-            while ($this->position != $destination && $this->autonomy > 0) {
-                if (isset($path[$i])) {
-                    $this->moveToNextStop($graph, $path[$i]);
-                }
-                $i++;
+            $this->updatePath(); // Update path once arrived
+            if ($this->returnToBase) {
+                $this->updateLoad(true); // Unload if necessary
             }
-            if ($this->position == $destination) {
-                $this->updateLoad(true);
-            }
+            $resolve(true); // Resolve the promise when finished
         }
     }
 

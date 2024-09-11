@@ -8,22 +8,23 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
 } else {
   $logged = false;
 }
-
-$admin = false;
-$userId = $_SESSION['user_id'];
-$stmt = $pdo->prepare("SELECT c.admin FROM client c WHERE c.id = ?");
-$stmt->execute([$userId]);
-$clientAdminInfo = $stmt->fetch();
-if ($clientAdminInfo['admin']) {
-  $admin = true;
-}
-
-$bicycleAssociated = false;
-$stmt = $pdo->prepare("SELECT b.id FROM client c LEFT JOIN bicycles b ON b.client_id = c.id WHERE c.id = ?");
-$stmt->execute([$userId]);
-$bicycleId = $stmt->fetch();
-if (isset($bicycleId['id']) && !is_null($bicycleId['id'])) {
-  $bicycleAssociated = true;
+if (isset($_SESSION['user_id'])) {
+  $admin = false;
+  $userId = $_SESSION['user_id'];
+  $stmt = $pdo->prepare("SELECT c.admin FROM client c WHERE c.id = ?");
+  $stmt->execute([$userId]);
+  $clientAdminInfo = $stmt->fetch();
+  if ($clientAdminInfo['admin']) {
+    $admin = true;
+  }
+  
+  $bicycleAssociated = false;
+  $stmt = $pdo->prepare("SELECT b.id FROM client c LEFT JOIN bicycles b ON b.client_id = c.id WHERE c.id = ?");
+  $stmt->execute([$userId]);
+  $bicycleId = $stmt->fetch();
+  if (isset($bicycleId['id']) && !is_null($bicycleId['id'])) {
+    $bicycleAssociated = true;
+  }
 }
 ?>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">

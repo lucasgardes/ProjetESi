@@ -4,6 +4,7 @@ require_once 'class/bicycle.php';
 
 
 use React\EventLoop\Loop;
+use React\Promise\Promise;
 use React\ChildProcess\Process;
 
 
@@ -15,12 +16,21 @@ function simulateBicycles($pdo, $graph) {
     $stops = ['stop4_id', 'stop3_id', 'stop2_id', 'start_stop_id'];
     $loop = Loop::get();
     for ($i = 1; $i < 5; $i++) {
-        $bicycles[] = new Bicycle($i, "PORTE_D_IVRY", $pdo);
+        $stmt = $pdo->prepare("SELECT s.name
+                        FROM `bicycles` b
+                        LEFT JOIN stops s on s.id = b.stop_id
+                        WHERE b.id = ?");
+        $stmt->execute([$i]);
+        $bicycleInfo = $stmt->fetch();
+        $bicycles[] = new Bicycle($i, $bicycleInfo['name'], $pdo);
     }
     $unassignedPaths = getUnassignedPaths($pdo);
 
 
     foreach ($bicycles as $bicycle) {
+        $loop->futureTick(function () use ($bicycle, &$unassignedPaths, $pdo, $graph) {
+            handleBicycleTask($bicycle, $unassignedPaths, $pdo, $graph);
+        });
         $loop->addTimer(0.100, function () use ($bicycle, &$unassignedPaths, $pdo, $graph) {
             while (!empty($unassignedPaths)) {
                 // find a path
@@ -32,6 +42,8 @@ function simulateBicycles($pdo, $graph) {
                     }
                 }
                 echo " assigned to bicycle " . $bicycle->id;
+                $stmt = $this->pdo->prepare("UPDATE bicycles SET path_id = ? WHERE id = ?");
+                $stmt->execute([$path['id'], $bicycle->id]);
                 if ($path) {
                     // Mark path as assigned and remove it from the list
                     $stmt = $pdo->prepare("UPDATE paths SET is_assigned = 1 WHERE id = ?");
@@ -68,6 +80,8 @@ function simulateBicycles($pdo, $graph) {
                                     }
                                 }
                                 echo " assigned to bicycle " . $bicycle->id;
+                                $stmt = $this->pdo->prepare("UPDATE bicycles SET path_id = ? WHERE id = ?");
+                                $stmt->execute([$anotherPath['id'], $bicycle->id]);
                                 // Mark path as assigned and remove it from the list
                                 $stmt = $pdo->prepare("UPDATE paths SET is_assigned = 1 WHERE id = ?");
                                 $stmt->execute([$anotherPath['id']]);
@@ -104,6 +118,26 @@ function simulateBicycles($pdo, $graph) {
     echo "\nAll paths have been assigned and cleaned, or all bicycles are at full capacity.\n";
 }
 
+function handleBicycleTask($bicycle, &$unassignedPaths, $pdo, $graph) {
+    assignPathToBicycle($bicycle, $unassignedPaths, $graph, $pdo)
+        ->then(function ($path) use ($bicycle, &$unassignedPaths, $pdo, $graph) {
+            if ($path) {
+                $bicycle->moveToDestination($path["start_stop_id"], $graph)
+                    ->then(function () use ($bicycle, $path, &$unassignedPaths, $pdo, $graph) {
+                        // Continue the task after the first move
+                        $bicycle->moveToDestination($path["stop2_id"], $graph)
+                            ->then(function () use ($bicycle, &$unassignedPaths, $pdo, $graph) {
+                                // Process the next task
+                                handleBicycleTask($bicycle, $unassignedPaths, $pdo, $graph);
+                            });
+                    });
+            } else {
+                // No more paths, the bicycle can return to base or stop
+                echo "No path assigned for bicycle " . $bicycle->id;
+            }
+        });
+}
+
 
 function getUnassignedPaths($pdo) {
     $unassignedPaths = [];
@@ -119,13 +153,18 @@ function getUnassignedPaths($pdo) {
 }
 
 
-function assignPathToBicycle(&$bicycle, $paths, $graph, $pdo) {
-    foreach ($paths as $path) {
-        if (canCompletePath($bicycle, $path, $graph, $pdo) && !pathAlreadyAssigned($path, $pdo)) {
-            return $path;
-        }
-    }
-    return null;
+function assignPathToBicycle($bicycle, &$unassignedPaths, $graph, $pdo) {
+    return new Promise(function ($resolve, $reject) use ($bicycle, &$unassignedPaths, $graph, $pdo) {
+        Loop::addTimer(0, function () use ($bicycle, &$unassignedPaths, $graph, $pdo, $resolve) {
+            foreach ($unassignedPaths as $path) {
+                if (canCompletePath($bicycle, $path, $graph, $pdo) && !pathAlreadyAssigned($path, $pdo)) {
+                    $resolve($path);
+                    return;
+                }
+            }
+            $resolve(null); // No path available
+        });
+    });
 }
 
 
