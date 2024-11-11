@@ -8,7 +8,7 @@
 <body>
     <?php include 'header.php';?>
     <?php
-        require 'pdo.php';
+        /*require 'pdo.php';
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -16,7 +16,7 @@
         if (!isset($_SESSION['user_id'])) {
             header("Location: login.php");
             exit;
-        }
+        }*/
 
         $stmt = $pdo->prepare("SELECT s.* FROM stops s");
         $stmt->execute();
@@ -31,6 +31,17 @@
         LEFT JOIN stops s ON s.id = b.stop_id");
         $stmt->execute();
         $bicycles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        //requete pour block street récupération des rues des la table block_street
+        $stmt = $pdo->prepare("SELECT * FROM rue_block");
+        $stmt->execute();
+        $blockedStreets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        //bellow is the request test for table block_street :
+        /*echo "<script>
+        var blockedStreetsData = " . json_encode($blockedStreets) . ";
+        alert('Rues bloquées: ' + JSON.stringify(blockedStreetsData));
+        </script>";*/
 
         if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['updateWinter'])) {
             $winterStatus = isset($_POST['winter']) ? 1 : 0;
@@ -54,6 +65,7 @@
         <button onclick="zoomIn()">Zoom In</button>
         <button onclick="zoomOut()">Zoom Out</button>
         <button onclick="toggleBackground()">Toggle Background</button>
+        <button id="blockStreetBtn" onclick="toggleBlockStreetMode()">Block Street Mode</button>
     </div>
     <script>
         var stopsData = <?php echo json_encode($stops); ?>;
@@ -67,6 +79,10 @@
         var zoomLevelDiv = document.getElementById("zoomLevel");
         var stationInfoDiv = document.getElementById("stationInfo");
         var ctx = canvas.getContext('2d');
+        var blockStreetMode = false; // Mode "Block Street"
+        var firstStationSelected = null; // Mode "Block Street"
+        var adjacentStations = []; // Mode "Block Street"
+        var blockedStreets = <?php echo json_encode($blockedStreets); ?>; // Mode "Block Street"
 
         var zoomLevel = 1;
         var minZoom = 1;
@@ -298,7 +314,7 @@
                             {"name": "LES_GOBELINS", "x": 919, "y": 574},
                             {"name": "PLACE_D_ITALIE", "x": 947, "y": 598},
                             {"name": "TOLBIAC", "x": 945, "y": 614},
-                            {"name": "MAISON_BLANCHE", "x": 986, "y": 638},
+                            {"name": "MAISON_BLANCHE", "x": 949, "y": 653},
                             {"name": "PORTE_D_ITALIE", "x": 986, "y": 641},
                             {"name": "PORTE_DE_CHOISY", "x": 1036, "y": 641},
                             {"name": "PORTE_D_IVRY", "x": 1085, "y": 641},
@@ -696,11 +712,19 @@
             if (text === currentStation) {
                 ctx.fillStyle = 'orange';
             }
-            ctx.fillStyle = currentStreet ? (lineName === currentStreet ? 'blue' : 'white') : 'white';
+            //ctx.fillStyle = currentStreet ? (lineName === currentStreet ? 'blue' : 'white') : 'white';
             if (empty == 1) {
                 ctx.fillStyle = 'green'; // Déchets ramassés
             } else {
                 ctx.fillStyle = 'red'; // Déchets non ramassés
+            }
+            // block steet mode la première  en violet
+            if (firstStationSelected && firstStationSelected.name === text) {
+                ctx.fillStyle = 'purple';
+            }
+            // block street mode station adjacente en jaune
+            else if (adjacentStations.some(s => s.name === text)) {
+                ctx.fillStyle = 'yellow';
             }
             ctx.fill();
 
@@ -719,7 +743,7 @@
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
-            ctx.strokeStyle = currentStreet ? (lineName === currentStreet ? 'blue' : 'gray') : color;
+            //ctx.strokeStyle = currentStreet ? (lineName === currentStreet ? 'blue' : 'gray') : color;
             if (empty == 1) {
                 ctx.strokeStyle = 'green'; // Déchets ramassés
             }
@@ -731,8 +755,54 @@
             ctx.font = '50px Arial'; // Définissez la taille de l'emoji
             ctx.textAlign = 'center'; // Centrez l'emoji sur le point
             ctx.textBaseline = 'middle'; // Centrez également verticalement
-            ctx.fillText('🚲', x, y); // Dessinez l'emoji vélo à l'emplacement donné
+            ctx.fillText('🚲', x, y); // Dessinez l'emoji 🚲 vélo à l'emplacement donné
         }
+
+        //--blocked street display--
+        function drawAccident(x, y) {
+            ctx.font = '25px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('⚠️', x, y);
+        }
+
+        //--blocked street display--
+        function drawOrangeLine(coord1, coord2) {
+            ctx.beginPath();
+            ctx.moveTo(coord1.x, coord1.y);
+            ctx.lineTo(coord2.x, coord2.y);
+            ctx.strokeStyle = '#f88105';
+            ctx.lineWidth = 5;
+            ctx.stroke();
+        }
+
+        //--blocked street display--
+        function getCoordinatesForStop(stopName, data) {
+            let foundStation = null;
+            Object.values(data.lines).forEach(line => {
+                const station = line.stations.find(s => s.name === stopName);
+                if (station) {
+                    foundStation = station;
+                }
+            });
+            return foundStation;
+        }
+
+        //--blocked street display--
+        function drawAccidentBetweenStops(stop1, stop2, data) {
+            const coord1 = getCoordinatesForStop(stop1, data);
+            const coord2 = getCoordinatesForStop(stop2, data);
+
+            if (coord1 && coord2) {
+                drawOrangeLine(coord1, coord2);
+                const middleX = (coord1.x + coord2.x) / 2;
+                const middleY = (coord1.y + coord2.y) / 2;
+                drawAccident(middleX, middleY);
+            } else {
+                console.error('Coordonnées non trouvées pour les arrêts :', stop1, stop2);
+            }
+        }
+
 
         function drawMap() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -746,7 +816,6 @@
 
             Object.entries(data.lines).forEach(([lineName, line]) => {
                 var lineNameDB = lineName.toUpperCase().replace(/[- ]/g, '_');
-                if (lineName !== currentStreet) {
                     for (let i = 0; i < line.stations.length - 1; i++) {
                         var station1 = line.stations[i];
                         var station2 = line.stations[i + 1];
@@ -756,7 +825,6 @@
                         var emptyStreetStatus = street ? street.empty : 0;
                         drawLine(station1.x, station1.y, station2.x, station2.y, line.color, lineName, emptyStreetStatus);
                         drawStation(station1.x, station1.y, station1.name, lineName, emptyStopStatus);
-                    }
                     var lastStation = line.stations[line.stations.length - 1];
                     var stop = stopsData.find(s => s.name === lastStation.name);
                     var emptyStopStatus = stop ? stop.empty : 0;
@@ -779,33 +847,11 @@
                     console.error('Station non trouvée pour le vélo : ', bike.name);
                 }
             });
-
-            ctx.restore();
-
-
-            if (currentStreet) {
-                var currentLine = data.lines[currentStreet];
-                for (let i = 0; i < currentLine.stations.length - 1; i++) {
-                    var station1 = currentLine.stations[i];
-                    var station2 = currentLine.stations[i + 1];
-                    var stop = stopsData.find(s => s.name === station1.name);
-                    var emptyStopStatus = stop ? stop.empty : 0;
-                    if (currentStreet.name) {
-                        var currentStreetNameBD = currentStreet.name.toUpperCase().replace(/[- ]/g, '_');
-                        var street = streetsData.find(s => s.name === currentStreetNameBD);
-                    } else {
-                        var street = streetsData.find(s => s.name === currentStreet.name);
-                    }
-                    var emptyStreetStatus = street ? street.empty : 0;
-                    drawLine(station1.x, station1.y, station2.x, station2.y, currentLine.color, currentStreet, emptyStreetStatus);
-                    drawStation(station1.x, station1.y, station1.name, currentStreet, emptyStopStatus);
-                }
-                var lastStation = currentLine.stations[currentLine.stations.length - 1];
-                var stop = stopsData.find(s => s.name === lastStation.name);
-                var emptyStatus = stop ? stop.empty : 0;
-                drawStation(lastStation.x, lastStation.y, lastStation.name, currentStreet, emptyStopStatus);
-            }
-
+            
+            //--blocked street display--
+            blockedStreets.forEach(street => {
+                drawAccidentBetweenStops(street.arret_1, street.arret_2, data);
+            });
             ctx.restore();
         }
 
@@ -830,14 +876,29 @@
             drawMap();
         }
 
-        function getStationInfo(stationName, lineName) {
+        //--Block Street Mode--
+        function toggleBlockStreetMode() {
+            blockStreetMode = !blockStreetMode;
+            if (!blockStreetMode) {
+                resetBlockStreetMode();
+            }
+        }
+
+        //--Block Street Mode--
+        function resetBlockStreetMode() {
+            firstStationSelected = null;
+            adjacentStations = [];
+            drawMap();
+        }
+
+        //arrêts adjacents for --Block Street Mode--
+        function getAdjacentStations(stationName, lineName) {
             const line = data.lines[lineName];
             const index = line.stations.findIndex(station => station.name === stationName);
-            const previousStation = index > 0 ? line.stations[index - 1].name : "None";
-            const nextStation = index < line.stations.length - 1 ? line.stations[index + 1].name : "None";
-            const stop = stopsData.find(s => s.name === stationName);
-            const emptyStatus = stop ? (stop.empty == 1 ? "Déchets ramassés" : "Déchets non ramassés") : "Information indisponible";
-            return `Station: ${stationName}\nRue: ${lineName}\nPrécédent: ${previousStation}\nSuivant: ${nextStation}\nÉtat: ${emptyStatus}`;
+            let adjacent = [];
+            if (index > 0) adjacent.push(line.stations[index - 1]); //précédent
+            if (index < line.stations.length - 1) adjacent.push(line.stations[index + 1]); //suivant
+            return adjacent;
         }
 
         function getStationAt(x, y) {
@@ -851,6 +912,52 @@
                 }
             }
             return null;
+        }
+
+        //--Block Street Mode--
+        function sendBlockStreetRequest(arret1, arret2) {
+            fetch('block_street.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `arret1=${encodeURIComponent(arret1)}&arret2=${encodeURIComponent(arret2)}`
+            })
+            .then(response => response.text())
+            .then(data => console.log(data))
+            .catch(error => console.error('Erreur:', error));
+        }
+
+        //gestion des rues bloquées --Block Street Mode--
+        canvas.addEventListener('click', function(event) {
+            if (!blockStreetMode) return;
+            var rect = canvas.getBoundingClientRect();
+            var x = (event.clientX - rect.left) / zoomLevel;
+            var y = (event.clientY - rect.top) / zoomLevel;
+            var clickedStationInfo = getStationAt(x - offsetX / zoomLevel, y - offsetY / zoomLevel);
+            if (!clickedStationInfo) return;
+            const clickedStation = clickedStationInfo.station;
+            const clickedLineName = clickedStationInfo.lineName;
+            if (!firstStationSelected) {
+                firstStationSelected = clickedStation;
+                adjacentStations = getAdjacentStations(clickedStation.name, clickedLineName);
+                drawMap();
+            }
+            else if (adjacentStations.some(s => s.name === clickedStation.name)) {
+                console.log(`Rue bloquée entre ${firstStationSelected.name} et ${clickedStation.name}`);
+                sendBlockStreetRequest(firstStationSelected.name, clickedStation.name);
+                resetBlockStreetMode();
+            }
+        });
+
+        function getStationInfo(stationName, lineName) {
+            const line = data.lines[lineName];
+            const index = line.stations.findIndex(station => station.name === stationName);
+            const previousStation = index > 0 ? line.stations[index - 1].name : "None";
+            const nextStation = index < line.stations.length - 1 ? line.stations[index + 1].name : "None";
+            const stop = stopsData.find(s => s.name === stationName);
+            const emptyStatus = stop ? (stop.empty == 1 ? "Déchets ramassés" : "Déchets non ramassés") : "Information indisponible";
+            return `Station: ${stationName}\nRue: ${lineName}\nPrécédent: ${previousStation}\nSuivant: ${nextStation}\nÉtat: ${emptyStatus}`;
         }
 
         canvas.addEventListener('mousemove', function(event) {      //********fonction de contruction de la map******
