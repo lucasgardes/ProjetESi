@@ -726,6 +726,8 @@
                 return;
             } else if (blockedStations.includes(text)) {
                 ctx.fillStyle = 'yellow';
+                ctx.font = '25px Arial';
+                ctx.fillText('⚠️', x - 40, y + 5);
             } else if (text === currentStation) {
                 ctx.fillStyle = 'orange';
             } else if (empty == 1) {
