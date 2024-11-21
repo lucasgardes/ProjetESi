@@ -32,16 +32,17 @@
         $stmt->execute();
         $bicycles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        //requete pour block street récupération des rues des la table block_street
-        $stmt = $pdo->prepare("SELECT * FROM rue_block");
+        // Mode "Block Street"
+        $stmt = $pdo->prepare("SELECT name FROM blocked_stop WHERE etat = 'blocked'");
         $stmt->execute();
-        $blockedStreets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $blockedStations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        //bellow is the request test for table block_street :
-        /*echo "<script>
-        var blockedStreetsData = " . json_encode($blockedStreets) . ";
-        alert('Rues bloquées: ' + JSON.stringify(blockedStreetsData));
-        </script>";*/
+        $stmt = $pdo->prepare("SELECT name FROM blocked_stop WHERE etat = 'deleted'");
+        $stmt->execute();
+        $deletedStations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $blockedStationsJSON = json_encode($blockedStations);
+        $deletedStationsJSON = json_encode($deletedStations);
 
         if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['updateWinter'])) {
             $winterStatus = isset($_POST['winter']) ? 1 : 0;
@@ -65,7 +66,9 @@
         <button onclick="zoomIn()">Zoom In</button>
         <button onclick="zoomOut()">Zoom Out</button>
         <button onclick="toggleBackground()">Toggle Background</button>
-        <button id="blockStreetBtn" onclick="toggleBlockStreetMode()">Block Street Mode</button>
+        <button onclick="toggleBlockStreetMode()">Bloquer des arret</button>
+        <button onclick="toggleDeleteStreetMode()">Supprimer des arret</button>
+        <button onclick="validateBlockStreet()">Valider</button>
     </div>
     <script>
         var stopsData = <?php echo json_encode($stops); ?>;
@@ -79,10 +82,19 @@
         var zoomLevelDiv = document.getElementById("zoomLevel");
         var stationInfoDiv = document.getElementById("stationInfo");
         var ctx = canvas.getContext('2d');
+        
         var blockStreetMode = false; // Mode "Block Street"
-        var firstStationSelected = null; // Mode "Block Street"
-        var adjacentStations = []; // Mode "Block Street"
-        var blockedStreets = <?php echo json_encode($blockedStreets); ?>; // Mode "Block Street"
+        var deleteStreetMode = false; // Mode "Block Street"
+        var blockedStations = <?php echo $blockedStationsJSON; ?>;// Mode "Block Street"
+        var deletedStations = <?php echo $deletedStationsJSON; ?>;// Mode "Block Street"
+        blockedStations = blockedStations.map(station => station.name);
+        deletedStations = deletedStations.map(station => station.name);
+        
+        window.onload = function() {
+        drawMap();
+        };
+        
+        
 
         var zoomLevel = 1;
         var minZoom = 1;
@@ -709,28 +721,24 @@
             ctx.beginPath();
             ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
 
-            if (text === currentStation) {
-                ctx.fillStyle = 'orange';
-            }
-            //ctx.fillStyle = currentStreet ? (lineName === currentStreet ? 'blue' : 'white') : 'white';
-            if (empty == 1) {
-                ctx.fillStyle = 'green'; // Déchets ramassés
-            } else {
-                ctx.fillStyle = 'red'; // Déchets non ramassés
-            }
-            // block steet mode la première  en violet
-            if (firstStationSelected && firstStationSelected.name === text) {
-                ctx.fillStyle = 'purple';
-            }
-            // block street mode station adjacente en jaune
-            else if (adjacentStations.some(s => s.name === text)) {
+            // Mode "Block Street"
+            if (deletedStations.includes(text)) {
+                return;
+            } else if (blockedStations.includes(text)) {
                 ctx.fillStyle = 'yellow';
+            } else if (text === currentStation) {
+                ctx.fillStyle = 'orange';
+            } else if (empty == 1) {
+                ctx.fillStyle = 'green';
+            } else {
+                ctx.fillStyle = 'red';
             }
-            ctx.fill();
 
+            ctx.fill();
             ctx.lineWidth = 2;
             ctx.strokeStyle = 'black';
             ctx.stroke();
+
             if (zoomLevel >= 2) {
                 ctx.fillStyle = 'black';
                 ctx.font = '9px Arial';
@@ -758,51 +766,6 @@
             ctx.fillText('🚲', x, y); // Dessinez l'emoji 🚲 vélo à l'emplacement donné
         }
 
-        //--blocked street display--
-        function drawAccident(x, y) {
-            ctx.font = '25px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('⚠️', x, y);
-        }
-
-        //--blocked street display--
-        function drawOrangeLine(coord1, coord2) {
-            ctx.beginPath();
-            ctx.moveTo(coord1.x, coord1.y);
-            ctx.lineTo(coord2.x, coord2.y);
-            ctx.strokeStyle = '#f88105';
-            ctx.lineWidth = 5;
-            ctx.stroke();
-        }
-
-        //--blocked street display--
-        function getCoordinatesForStop(stopName, data) {
-            let foundStation = null;
-            Object.values(data.lines).forEach(line => {
-                const station = line.stations.find(s => s.name === stopName);
-                if (station) {
-                    foundStation = station;
-                }
-            });
-            return foundStation;
-        }
-
-        //--blocked street display--
-        function drawAccidentBetweenStops(stop1, stop2, data) {
-            const coord1 = getCoordinatesForStop(stop1, data);
-            const coord2 = getCoordinatesForStop(stop2, data);
-
-            if (coord1 && coord2) {
-                drawOrangeLine(coord1, coord2);
-                const middleX = (coord1.x + coord2.x) / 2;
-                const middleY = (coord1.y + coord2.y) / 2;
-                drawAccident(middleX, middleY);
-            } else {
-                console.error('Coordonnées non trouvées pour les arrêts :', stop1, stop2);
-            }
-        }
-
 
         function drawMap() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -810,26 +773,24 @@
             ctx.scale(zoomLevel, zoomLevel);
             ctx.translate(offsetX / zoomLevel, offsetY / zoomLevel);
 
-            // if (showBackground) {
-            //     ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-            // }
-
             Object.entries(data.lines).forEach(([lineName, line]) => {
                 var lineNameDB = lineName.toUpperCase().replace(/[- ]/g, '_');
-                    for (let i = 0; i < line.stations.length - 1; i++) {
-                        var station1 = line.stations[i];
-                        var station2 = line.stations[i + 1];
-                        var stop = stopsData.find(s => s.name === station1.name);
-                        var emptyStopStatus = stop ? stop.empty : 0;
-                        var street = streetsData.find(s => s.name === lineNameDB);
-                        var emptyStreetStatus = street ? street.empty : 0;
-                        drawLine(station1.x, station1.y, station2.x, station2.y, line.color, lineName, emptyStreetStatus);
-                        drawStation(station1.x, station1.y, station1.name, lineName, emptyStopStatus);
-                    var lastStation = line.stations[line.stations.length - 1];
-                    var stop = stopsData.find(s => s.name === lastStation.name);
+                for (let i = 0; i < line.stations.length - 1; i++) {
+                    var station1 = line.stations[i];
+                    var station2 = line.stations[i + 1];
+                    var stop = stopsData.find(s => s.name === station1.name);
                     var emptyStopStatus = stop ? stop.empty : 0;
-                    drawStation(lastStation.x, lastStation.y, lastStation.name, lineName, emptyStopStatus);
+                    var street = streetsData.find(s => s.name === lineNameDB);
+                    var emptyStreetStatus = street ? street.empty : 0;
+
+                    drawLine(station1.x, station1.y, station2.x, station2.y, line.color, lineName, emptyStreetStatus);
+                    drawStation(station1.x, station1.y, station1.name, lineName, emptyStopStatus);
                 }
+
+                var lastStation = line.stations[line.stations.length - 1];
+                var stop = stopsData.find(s => s.name === lastStation.name);
+                var emptyStopStatus = stop ? stop.empty : 0;
+                drawStation(lastStation.x, lastStation.y, lastStation.name, lineName, emptyStopStatus);
             });
 
             bicyclesData.forEach(bike => {
@@ -847,11 +808,7 @@
                     console.error('Station non trouvée pour le vélo : ', bike.name);
                 }
             });
-            
-            //--blocked street display--
-            blockedStreets.forEach(street => {
-                drawAccidentBetweenStops(street.arret_1, street.arret_2, data);
-            });
+
             ctx.restore();
         }
 
@@ -876,30 +833,7 @@
             drawMap();
         }
 
-        //--Block Street Mode--
-        function toggleBlockStreetMode() {
-            blockStreetMode = !blockStreetMode;
-            if (!blockStreetMode) {
-                resetBlockStreetMode();
-            }
-        }
 
-        //--Block Street Mode--
-        function resetBlockStreetMode() {
-            firstStationSelected = null;
-            adjacentStations = [];
-            drawMap();
-        }
-
-        //arrêts adjacents for --Block Street Mode--
-        function getAdjacentStations(stationName, lineName) {
-            const line = data.lines[lineName];
-            const index = line.stations.findIndex(station => station.name === stationName);
-            let adjacent = [];
-            if (index > 0) adjacent.push(line.stations[index - 1]); //précédent
-            if (index < line.stations.length - 1) adjacent.push(line.stations[index + 1]); //suivant
-            return adjacent;
-        }
 
         function getStationAt(x, y) {
             for (const [lineName, line] of Object.entries(data.lines)) {
@@ -914,41 +848,76 @@
             return null;
         }
 
-        //--Block Street Mode--
-        function sendBlockStreetRequest(arret1, arret2) {
-            fetch('block_street.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `arret1=${encodeURIComponent(arret1)}&arret2=${encodeURIComponent(arret2)}`
-            })
-            .then(response => response.text())
-            .then(data => console.log(data))
-            .catch(error => console.error('Erreur:', error));
+
+        //---------------------------------------------------
+        //Block Stop Part :
+
+        function toggleBlockStreetMode() {
+            blockStreetMode = !blockStreetMode;
+            deleteStreetMode = false;
+            alert(blockStreetMode ? "Mode Bloquer des rues activé. Cliquez sur les arrêts pour les bloquer." : "Mode Bloquer des rues désactivé.");
         }
 
-        //gestion des rues bloquées --Block Street Mode--
+        function toggleDeleteStreetMode() {
+            deleteStreetMode = !deleteStreetMode;
+            blockStreetMode = false;
+            alert(deleteStreetMode ? "Mode Supprimer des rues activé. Cliquez sur les arrêts pour les supprimer." : "Mode Supprimer des rues désactivé.");
+        }
+
         canvas.addEventListener('click', function(event) {
-            if (!blockStreetMode) return;
             var rect = canvas.getBoundingClientRect();
             var x = (event.clientX - rect.left) / zoomLevel;
             var y = (event.clientY - rect.top) / zoomLevel;
-            var clickedStationInfo = getStationAt(x - offsetX / zoomLevel, y - offsetY / zoomLevel);
-            if (!clickedStationInfo) return;
-            const clickedStation = clickedStationInfo.station;
-            const clickedLineName = clickedStationInfo.lineName;
-            if (!firstStationSelected) {
-                firstStationSelected = clickedStation;
-                adjacentStations = getAdjacentStations(clickedStation.name, clickedLineName);
+            var stationInfo = getStationAt(x - offsetX / zoomLevel, y - offsetY / zoomLevel);
+            
+            if (stationInfo) {
+                var stationName = stationInfo.station.name;
+                if (blockStreetMode) {
+                    if (blockedStations.includes(stationName)) {
+                        blockedStations = blockedStations.filter(station => station !== stationName);
+                    } else {
+                        blockedStations.push(stationName);
+                    }
+                } else if (deleteStreetMode) {
+                    if (deletedStations.includes(stationName)) {
+                        deletedStations = deletedStations.filter(station => station !== stationName);
+                    } else {
+                        deletedStations.push(stationName);
+                    }
+                }
                 drawMap();
             }
-            else if (adjacentStations.some(s => s.name === clickedStation.name)) {
-                console.log(`Rue bloquée entre ${firstStationSelected.name} et ${clickedStation.name}`);
-                sendBlockStreetRequest(firstStationSelected.name, clickedStation.name);
-                resetBlockStreetMode();
-            }
         });
+
+
+        function validateBlockStreet() {
+            if (blockedStations.length === 0 && deletedStations.length === 0) {
+                alert("Aucun arrêt sélectionné pour être bloqué ou supprimé.");
+                return;
+            }
+
+            // Envoyer la requête à la base de données
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "block_street.php", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        alert("Les arrêts sélectionnés ont été mis à jour.");
+
+                        drawMap();
+                    } else {
+                        alert("Erreur lors de la mise à jour des arrêts.");
+                    }
+                }
+            };
+            xhr.send("blockedStations=" + JSON.stringify(blockedStations) + "&deletedStations=" + JSON.stringify(deletedStations));
+        }
+
+
+        //---------------------------------------------------
+
+        
 
         function getStationInfo(stationName, lineName) {
             const line = data.lines[lineName];
