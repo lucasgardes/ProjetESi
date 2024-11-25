@@ -68,7 +68,8 @@
         <button onclick="toggleBackground()">Toggle Background</button>
         <button onclick="toggleBlockStreetMode()">Bloquer des arret</button>
         <button onclick="toggleDeleteStreetMode()">Supprimer des arret</button>
-        <button onclick="validateBlockStreet()">Valider</button>
+        <button onclick="validateStreetUpdate()">Valider</button>
+        <button onclick="toggleUnblockStreetMode()">Débloquer un arret</button>
     </div>
     <script>
         var stopsData = <?php echo json_encode($stops); ?>;
@@ -85,8 +86,10 @@
         
         var blockStreetMode = false; // Mode "Block Street"
         var deleteStreetMode = false; // Mode "Block Street"
+        var unblockStreetMode = false; // Mode "Block Street
         var blockedStations = <?php echo $blockedStationsJSON; ?>;// Mode "Block Street"
         var deletedStations = <?php echo $deletedStationsJSON; ?>;// Mode "Block Street"
+        var unblockStations = [];
         blockedStations = blockedStations.map(station => station.name);
         deletedStations = deletedStations.map(station => station.name);
         
@@ -857,63 +860,93 @@
         function toggleBlockStreetMode() {
             blockStreetMode = !blockStreetMode;
             deleteStreetMode = false;
+            unblockStreetMode = false;
             alert(blockStreetMode ? "Mode Bloquer des rues activé. Cliquez sur les arrêts pour les bloquer." : "Mode Bloquer des rues désactivé.");
         }
 
         function toggleDeleteStreetMode() {
             deleteStreetMode = !deleteStreetMode;
             blockStreetMode = false;
+            unblockStreetMode = false;
             alert(deleteStreetMode ? "Mode Supprimer des rues activé. Cliquez sur les arrêts pour les supprimer." : "Mode Supprimer des rues désactivé.");
         }
+
+        function toggleUnblockStreetMode() {
+            unblockStreetMode = !unblockStreetMode;
+            blockStreetMode = false;
+            deleteStreetMode = false;
+            alert(unblockStreetMode ? "Mode Débloquer des arrêts activé." : "Mode Débloquer des arrêts désactivé.");
+        }
+
 
         canvas.addEventListener('click', function(event) {
             var rect = canvas.getBoundingClientRect();
             var x = (event.clientX - rect.left) / zoomLevel;
             var y = (event.clientY - rect.top) / zoomLevel;
             var stationInfo = getStationAt(x - offsetX / zoomLevel, y - offsetY / zoomLevel);
-            
+
             if (stationInfo) {
                 var stationName = stationInfo.station.name;
+
+                // Mode "Bloquer"
                 if (blockStreetMode) {
-                    if (blockedStations.includes(stationName)) {
-                        blockedStations = blockedStations.filter(station => station !== stationName);
-                    } else {
+                    if (!blockedStations.includes(stationName)) {
                         blockedStations.push(stationName);
                     }
-                } else if (deleteStreetMode) {
-                    if (deletedStations.includes(stationName)) {
-                        deletedStations = deletedStations.filter(station => station !== stationName);
-                    } else {
+                }
+                // Mode "Supprimer"
+                else if (deleteStreetMode) {
+                    if (!deletedStations.includes(stationName)) {
                         deletedStations.push(stationName);
                     }
                 }
-                drawMap();
+                // Mode "Débloquer"
+                else if (unblockStreetMode) {
+                    // Retirer l'arrêt de la liste des bloqués
+                    if (blockedStations.includes(stationName)) {
+                        blockedStations = blockedStations.filter(station => station !== stationName);
+                    }
+                    // Retirer l'arrêt de la liste des supprimés
+                    if (deletedStations.includes(stationName)) {
+                        deletedStations = deletedStations.filter(station => station !== stationName);
+                    }
+                    // Ajouter à la liste des débloqués si nécessaire
+                    if (!unblockStations.includes(stationName)) {
+                        unblockStations.push(stationName);
+                    }
+                }
+
+                drawMap();  // Redessiner la carte après mise à jour
             }
         });
 
 
-        function validateBlockStreet() {
-            if (blockedStations.length === 0 && deletedStations.length === 0) {
-                alert("Aucun arrêt sélectionné pour être bloqué ou supprimé.");
+        function validateStreetUpdate() {
+            if (blockedStations.length === 0 && deletedStations.length === 0 && unblockStations.length === 0) {
+                alert("Aucun arrêt sélectionné.");
                 return;
             }
 
-            // Envoyer la requête à la base de données
+            // Envoi des arrêts à mettre à jour (bloquer, supprimer, débloquer)
             var xhr = new XMLHttpRequest();
-            xhr.open("POST", "block_street.php", true);
+            xhr.open("POST", "update_street.php", true);  // Appeler update_street.php
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === XMLHttpRequest.DONE) {
                     if (xhr.status === 200) {
                         alert("Les arrêts sélectionnés ont été mis à jour.");
-
-                        drawMap();
+                        drawMap();  // Redessiner la carte avec les nouvelles données
                     } else {
                         alert("Erreur lors de la mise à jour des arrêts.");
                     }
                 }
             };
-            xhr.send("blockedStations=" + JSON.stringify(blockedStations) + "&deletedStations=" + JSON.stringify(deletedStations));
+
+            // Envoi des données des arrêts bloqués, supprimés et débloqués
+            xhr.send("blockedStations=" + JSON.stringify(blockedStations) +
+                    "&deletedStations=" + JSON.stringify(deletedStations) +
+                    "&unblockStations=" + JSON.stringify(unblockStations));  // Envoyer aussi les débloqués
         }
 
 
