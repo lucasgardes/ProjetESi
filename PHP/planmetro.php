@@ -92,9 +92,13 @@
         var unblockStations = [];
         blockedStations = blockedStations.map(station => station.name);
         deletedStations = deletedStations.map(station => station.name);
+        var id_bike_user = 6;
+        var stopsDataForBike = [];
         
         window.onload = function() {
+        getBikeRoute();
         drawMap();
+
         };
         
         
@@ -110,7 +114,7 @@
         var data = {
                 "lines": {
                     "Croix-Baragnon": {
-                        "color": "#FFCD00",
+                        "color": "#111111",
                         "stations": [
                             {"name": "LA_DEFENSE", "x": 212, "y": 235},
                             {"name": "ESPLANADE_DE_LA_DEFENSE", "x": 236, "y": 248},
@@ -140,7 +144,7 @@
                         ]
                     },
                     "Arts": {
-                        "color": "#003CA6",
+                        "color": "#111111",
                         "stations": [
                             {"name": "PORTE_DAUPHINE", "x": 275, "y": 337},
                             {"name": "VICTOR_HUGO", "x": 329, "y": 364},
@@ -170,7 +174,7 @@
                         ]
                     },
                     "Pargaminières": {
-                        "color": "#837902",
+                        "color": "#111111",
                         "stations": [
                             {"name": "PONT_DE_LEVALLOIS_BECON", "x": 401, "y": 194},
                             {"name": "ANATOLE_FRANCE", "x": 419, "y": 205},
@@ -209,7 +213,7 @@
                         ]
                     },
                     "Saint-Antoine du T": {
-                        "color": "#000451",
+                        "color": "#111111",
                         "stations": [
                             {"name": "PORTE_DE_CLIGNANCOURT", "x": 813, "y": 177},
                             {"name": "SIMPLON", "x": 838, "y": 190},
@@ -240,7 +244,7 @@
                         ]
                     },
                     "Fonderie": {
-                        "color": "#168133",
+                        "color": "#111111",
                         "stations": [
                             {"name": "BOBIGNY_PABLO_PICASSO", "x": 1425, "y": 242},
                             {"name": "BOBIGNY_PANTIN_RAYMOND_QUENEAU", "x": 1337, "y": 205},
@@ -562,7 +566,7 @@
                         ]
                     },
                     "Bédelières": {
-                        "color": "#999999",
+                        "color": "#111111",
                         "stations": [
                             {"name": "PONT_DU_GARIGLIANO", "x": 328, "y": 592},
                             {"name": "BALARD", "x": 360, "y": 617},
@@ -588,7 +592,7 @@
                         ]
                     },
                     "Merlane": {
-                        "color": "#999999",
+                        "color": "#111111",
                         "stations": [
                             {"name": "LA_DEFENSE", "x": 212, "y": 235},
                             {"name": "CHARLES_DE_GAULLE_ETOILE", "x": 401, "y": 333},
@@ -611,7 +615,7 @@
                         ]
                     },
                     "Etroite": {
-                        "color": "#524816",
+                        "color": "#111111",
                         "stations": [
                             {"name": "PORTE_DE_CLICHY", "x": 563, "y": 188},
                             {"name": "PEREIRE", "x": 437, "y": 249},
@@ -630,7 +634,7 @@
                         ]
                     },
                     "Tourneurs": {
-                        "color": "#524816",
+                        "color": "#111111",
                         "stations": [
                             {"name": "GARE_DU_NORD", "x": 956, "y": 259},
                             {"name": "CHATELET_LES_HALLES", "x": 846, "y": 406},
@@ -671,6 +675,7 @@
             for (const line of Object.values(data.lines)) {
                 for (const station of line.stations) {
                     if (station.name === stationName) {
+                        console.log(`Station ${stationName}:`, station);
                         return station;
                     }
                 }
@@ -756,13 +761,18 @@
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
-            //ctx.strokeStyle = currentStreet ? (lineName === currentStreet ? 'blue' : 'gray') : color;
+
+            // color de la line
             if (empty == 1) {
-                ctx.strokeStyle = 'green'; // Déchets ramassés
+                ctx.strokeStyle = 'green'; // Déchets ramassés donc vert
+            } else {
+                ctx.strokeStyle = color; // color en paramètre
             }
+
             ctx.lineWidth = 4;
             ctx.stroke();
         }
+
 
         function drawBicycle(x, y) {
             ctx.font = '50px Arial'; // Définissez la taille de l'emoji
@@ -773,11 +783,13 @@
 
 
         function drawMap() {
+            console.log("Données des arrêts pour le vélo:", stopsDataForBike);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
             ctx.scale(zoomLevel, zoomLevel);
             ctx.translate(offsetX / zoomLevel, offsetY / zoomLevel);
 
+            // Dessiner toutes les lignes de métro et stations
             Object.entries(data.lines).forEach(([lineName, line]) => {
                 var lineNameDB = lineName.toUpperCase().replace(/[- ]/g, '_');
                 for (let i = 0; i < line.stations.length - 1; i++) {
@@ -797,6 +809,30 @@
                 var emptyStopStatus = stop ? stop.empty : 0;
                 drawStation(lastStation.x, lastStation.y, lastStation.name, lineName, emptyStopStatus);
             });
+
+            // Dessiner les trajet du vélo (ligne en violet)
+            if (stopsDataForBike && stopsDataForBike.length > 0) {
+                for (let i = 0; i < stopsDataForBike.length - 1; i++) {
+                    const stop1 = stopsDataForBike[i];
+                    const stop2 = stopsDataForBike[i + 1];
+
+                    // Trouver les coordonnées des arrêts
+                    const station1 = getStationByName(stop1.name);
+                    const station2 = getStationByName(stop2.name);
+
+                    if (station1 && station2) {
+                        drawLine(station1.x, station1.y, station2.x, station2.y, 'magenta', 'bikeRoute', 0);
+                    }
+                }
+
+                // Dessiner les arrêts du vélo
+                stopsDataForBike.forEach(stop => {
+                    const station = getStationByName(stop.name);
+                    if (station) {
+                        drawStation(station.x, station.y, station.name, 'bikeRoute', 0);  // Afficher tous les arrêts
+                    }
+                });
+            }
 
             bicyclesData.forEach(bike => {
                 let stationFound = null;
@@ -950,9 +986,37 @@
         }
 
 
+                    //fin block mode
         //---------------------------------------------------
 
+
+        //route user
+
+        function getBikeRoute() {
+            fetch('get_bike_route.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ bike_id: id_bike_user })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    stopsDataForBike = data.stops; // Assurez-vous que les données sont bien récupérées
+                    drawMap();  // Redessiner la carte avec les arrêts du vélo
+                } else {
+                    console.error('Erreur:', data.message);
+                }
+            })
+            .catch(error => console.error('Erreur AJAX:', error));
+        }
         
+        
+
+        
+            //fin route user
+        //---------------------------------------------------
 
         function getStationInfo(stationName, lineName) {
             const line = data.lines[lineName];
