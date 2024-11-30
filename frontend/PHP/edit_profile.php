@@ -17,14 +17,39 @@ $profileInfoSQL->execute([$userId]);
 $user = $profileInfoSQL->fetch();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $updateProfileSQL = $pdo->prepare("UPDATE client SET firstname = ?, lastname = ?, email = ? WHERE id = ?");
-    if ($updateProfileSQL->execute([$_POST['firstname'], $_POST['lastname'], $_POST['email'], $_SESSION['user_id']])) {
-        $_SESSION['message'] = "Profil mis à jour avec succès.";
-        header("Location: edit_profile.php");
-        exit;
-    } else {
-        $_SESSION['error'] = "Erreur lors de la mise à jour du profil.";
+    if (!empty($_POST['firstname']) && !empty($_POST['lastname']) && !empty($_POST['email'])) {
+        $updateProfileSQL = $pdo->prepare("UPDATE client SET firstname = ?, lastname = ?, email = ? WHERE id = ?");
+        if ($updateProfileSQL->execute([$_POST['firstname'], $_POST['lastname'], $_POST['email'], $_SESSION['user_id']])) {
+            $_SESSION['message'] = "Profil mis à jour avec succès.";
+        } else {
+            $_SESSION['error'] = "Erreur lors de la mise à jour du profil.";
+        }
     }
+    if (!empty($_POST['current_password']) && !empty($_POST['new_password']) && !empty($_POST['confirm_password'])) {
+        // Vérification du mot de passe actuel
+        $passwordCheckSQL = $pdo->prepare("SELECT password FROM client WHERE id = ?");
+        $passwordCheckSQL->execute([$userId]);
+        $hashedPassword = $passwordCheckSQL->fetchColumn();
+        if (password_verify($_POST['current_password'], $hashedPassword)) {
+            // Vérification que les nouveaux mots de passe correspondent
+            if ($_POST['new_password'] === $_POST['confirm_password']) {
+                // Mise à jour du mot de passe
+                $newHashedPassword = password_hash($_POST['new_password'], PASSWORD_DEFAULT);
+                $updatePasswordSQL = $pdo->prepare("UPDATE client SET password = ? WHERE id = ?");
+                if ($updatePasswordSQL->execute([$newHashedPassword, $userId])) {
+                    $_SESSION['message'] = "Mot de passe mis à jour avec succès.";
+                } else {
+                    $_SESSION['error'] = "Erreur lors de la mise à jour du mot de passe.";
+                }
+            } else {
+                $_SESSION['error'] = "Les nouveaux mots de passe ne correspondent pas.";
+            }
+        } else {
+            $_SESSION['error'] = "Le mot de passe actuel est incorrect.";
+        }
+    }
+    header("Location: edit_profile.php");
+    exit;
 }
 
 $successMessage = isset($_SESSION['message']) ? $_SESSION['message'] : '';
@@ -57,6 +82,25 @@ unset($_SESSION['message'], $_SESSION['error']);
             <div class="form-group">
                 <label for="email">Email</label>
                 <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" required>
+            </div>
+            <div class="mx-auto pt-4">
+                <button type="submit" class="btn btn-primary">Mettre à jour</button>
+            </div>
+        </form>
+        <form method="post">
+            <h3>Modifier votre mot de passe</h3>
+            <div class="form-group">
+                <label for="current_password">Mot de passe actuel</label>
+                <input type="password" class="form-control" id="current_password" name="current_password" required>
+            </div>
+            <div class="form-group">
+                <label for="new_password">Nouveau mot de passe</label>
+                <input type="password" class="form-control" id="new_password" name="new_password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirm_password">Confirmer le nouveau mot de passe</label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required
+                oninput="this.setCustomValidity(this.value !== document.getElementById('new_password').value ? 'Les mots de passe ne correspondent pas.' : '')">
             </div>
             <div class="mx-auto pt-4">
                 <button type="submit" class="btn btn-primary">Mettre à jour</button>

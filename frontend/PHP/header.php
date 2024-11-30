@@ -9,14 +9,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
   $logged = false;
 }
 if (isset($_SESSION['user_id'])) {
-  $admin = false;
   $userId = $_SESSION['user_id'];
-  $stmt = $pdo->prepare("SELECT c.admin FROM client c WHERE c.id = ?");
-  $stmt->execute([$userId]);
-  $clientAdminInfo = $stmt->fetch();
-  if ($clientAdminInfo['admin']) {
-    $admin = true;
-  }
   
   $bicycleAssociated = false;
   $stmt = $pdo->prepare("SELECT b.id FROM client c LEFT JOIN bicycles b ON b.client_id = c.id WHERE c.id = ?");
@@ -66,11 +59,6 @@ if (isset($_SESSION['user_id'])) {
               <li><a class="dropdown-item" href="dashboard.php">Historique des Itinéraires</a></li>
               <li><a class="dropdown-item" href="user_dashboard.php">Choisir un Itinéraire</a></li>
               <li><a class="dropdown-item" href="planmetro.php">Map</a></li>
-            <?php endif; ?>
-            <?php if ($admin) : ?>
-              <li><a class="dropdown-item" href="../../backend/PHP/manage_bicycles.php">Gestion des Vélos</a></li>
-              <li><a class="dropdown-item" href="../../backend/PHP/analysis_and_reports.php">Statistiques des Vélos</a></li>
-              <li><a class="dropdown-item" href="../../backend/PHP/manage_users.php">Gestion des Utilisateurs</a></li>
             <?php endif; ?>
             <li><a class="dropdown-item" href="logout.php">Déconnexion</a></li>
           </ul>

@@ -20,17 +20,7 @@ if (!isset($_SESSION['user_id'])) {
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Bienvenue sur le Backoffice</h1>
-            <nav>
-                <ul>
-                    <li><a href="index.php">Accueil</a></li>
-                    <li><a href="manage_users.php">Gestion des Utilisateurs</a></li>
-                    <li><a href="manage_bicycles.php">Gestion des Vélos</a></li>
-                    <li><a href="analysis_and_reports.php">Rapports & Analyses</a></li>
-                </ul>
-            </nav>
-        </header>
+    <?php include 'header.php'; ?>
         <main>
             <section>
                 <h2>Dashboard</h2>

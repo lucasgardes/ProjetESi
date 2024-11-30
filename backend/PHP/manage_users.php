@@ -62,6 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <?php include 'header.php'; ?>
 </head>
 <body>
     <div class="container mt-5">
@@ -72,7 +73,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <th>ID</th>
                     <th>Nom</th>
                     <th>Email</th>
-                    <th>Admin</th>
                     <th>Vélo Associé</th>
                     <th>Vélos Disponibles</th>
                     <th>Actions</th>
@@ -85,13 +85,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <td><?= htmlspecialchars($user['id']) ?></td>
                     <td><?= htmlspecialchars($user['firstname']) . ' ' . htmlspecialchars($user['lastname']) ?></td>
                     <td><?= htmlspecialchars($user['email']) ?></td>
-                    <td>
-                        <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
-                        <select name="is_admin" class="form-select">
-                            <option value="0" <?= $user['admin'] == 0 ? 'selected' : '' ?>>Non</option>
-                            <option value="1" <?= $user['admin'] == 1 ? 'selected' : '' ?>>Oui</option>
-                        </select>
-                    </td>
                     <td><?= $user['bicycle_id'] ? $user['bicycle_id'] : 'None' ?></td>
                     <td>
                         <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
