@@ -1,0 +1,58 @@
+/* Enlever la décoration de texte pour les liens */
+a {
+    text-decoration: none;
+    color: #ffffff; /* Ajuster la couleur pour plus de contraste */
+    font-weight: 600;
+}
+
+/* Style de la barre de navigation avec ombre et espace */
+.navbar-gradient {
+    background: linear-gradient(90deg, #4CAF50 0%, #3e8e41 100%);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 1rem 2rem;
+}
+
+/* Logo dans la barre de navigation */
+.navbar-brand {
+    width: 80px;
+    height: auto;
+}
+
+/* Logo responsive */
+.logo {
+    width: 100%;
+    max-width: 100px; /* Limite maximale pour un meilleur rendu */
+    height: auto;
+}
+
+/* Lien du menu déroulant */
+.dropdown-item {
+    font-weight: 500;
+    color: #333;
+    padding: 0.5rem 1rem;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Style de survol pour le menu déroulant */
+.dropdown-item:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.dropdown-menu {
+    border-radius: 5px;
+    padding: 0.5rem 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Amélioration du style du lien dans la barre de navigation */
+.navbar a {
+    color: black;
+    padding: 0.5rem 1rem;
+    transition: color 0.3s, background-color 0.3s;
+}
+
+.navbar a:hover {
+    color: #e0e0e0; /* Légère différence pour l’effet de survol */
+    background-color: rgba(255, 255, 255, 0.1); /* Effet d'ombre légère */
+}

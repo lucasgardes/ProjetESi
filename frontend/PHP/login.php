@@ -1,12 +1,15 @@
 <?php
-$post = $_POST;
-var_dump($post);
-die();
-if (isset($post) && !empty($post)) {
-    $firstname = $post['firstname'];
-    $lastname = $post['lastname'];
-    $email = $post['email'];
-    $password = $post['password'];
+    include '../../pdo.php';
+    session_start();
+    $post = $_POST;
+    $logged = false;
+    if (isset($post) && !empty($post)) {
+        if (isset($post['firstname']) && isset($post['lastname'])) {
+            $firstname = $post['firstname'];
+            $lastname = $post['lastname'];
+        }
+        $email = $post['email'];
+        $password = $post['password'];
 
     $servername = "localhost";
     $username = "348216";

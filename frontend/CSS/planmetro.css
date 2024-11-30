@@ -1,0 +1,102 @@
+/* Style général */
+body {
+    background-color: #f3f4f6;
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+/* Style de la carte */
+canvas {
+    border: 2px solid #333;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.canvasContainer {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+
+.winterForm {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    flex : 1;
+}
+
+.winterFormContainer {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+/* Style des informations en haut de la carte */
+#mousePosition, #zoomLevel, #stationInfo {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    color: #333;
+    margin: 5px;
+    text-align: center;
+}
+
+/* Position du stationInfo à gauche de la carte */
+#stationInfo {
+    position: absolute;
+    left: -50px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 150px;
+}
+
+/* Style des contrôles */
+#controls {
+    margin-top: 15px;
+    text-align: center;
+    padding-bottom: 10px;
+}
+
+/* Style des boutons */
+button {
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    margin: 0 5px;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+button:active {
+    background-color: #388e3c;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) inset;
+}
+
+.mapInformations {
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+    flex: 1;
+}
+
+.canvasTop {
+    display: flex;
+}

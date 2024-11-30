@@ -1,0 +1,84 @@
+/* Style général */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f9fc;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container principal */
+.container {
+    max-width: 600px;
+    background-color: #ffffff;
+    padding: 2rem;
+    margin: 3rem auto;
+    border-radius: 8px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Titre de la page */
+h2 {
+    color: #333;
+    font-weight: 700;
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 0.5rem;
+}
+
+/* Messages de succès et d'erreur */
+.alert {
+    border-radius: 5px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+/* Style des labels */
+
+.form-group label {
+    font-weight: 600;
+    color: #555;
+}
+
+/* Style des inputs */
+.form-control {
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 0.75rem;
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 6px rgba(76, 175, 80, 0.3);
+}
+
+/* Bouton de soumission */
+.btn-primary {
+    width: 50%;
+    display: block !important;
+    margin: 0 auto;
+}
+
+/* Responsivité */
+@media (max-width: 768px) {
+    .container {
+        padding: 1.5rem;
+        margin: 2rem auto;
+    }
+}
