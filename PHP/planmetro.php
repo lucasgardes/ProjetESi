@@ -8,7 +8,7 @@
 <body>
     <?php include 'header.php';?>
     <?php
-        /*require 'pdo.php';
+        require 'pdo.php';
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -16,7 +16,12 @@
         if (!isset($_SESSION['user_id'])) {
             header("Location: login.php");
             exit;
-        }*/
+        }
+
+        $stmt = $pdo->prepare("SELECT b.id FROM bicycles b WHERE b.client_id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $bicycle_id = $stmt->fetch(PDO::FETCH_ASSOC);
+        $bicycle_id = $bicycle_id['id'];
 
         $stmt = $pdo->prepare("SELECT s.* FROM stops s");
         $stmt->execute();
@@ -92,7 +97,7 @@
         var unblockStations = [];
         blockedStations = blockedStations.map(station => station.name);
         deletedStations = deletedStations.map(station => station.name);
-        var id_bike_user = 6;
+        var id_bike_user = <?php echo json_encode($bicycle_id); ?>;
         var stopsDataForBike = [];
         
         window.onload = function() {
