@@ -1,5 +1,9 @@
 <?php
 require '../../pdo.php';
+require '../../vendor/autoload.php'; // Inclure PHPMailer
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -18,18 +22,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $insert = $pdo->prepare("INSERT INTO client (firstname, lastname, email, `password`, `verified`) VALUES (?, ?, ?, ?, 0)");
         $insert->execute([$_POST['firstname'], $_POST['lastname'], $email, $password]);
 
-        // Envoi de l'email de confirmation
-        $to = $email;
-        $subject = "Confirmation de votre compte";
-        $message = "Veuillez cliquer sur ce lien pour confirmer votre compte : http://localhost/projetBSI/projetESi/frontend/PHP/verify.php?email=$email";
-        $headers = "From: no-reply@votredomaine.com\r\n";
-        $headers .= "Reply-To: no-reply@votredomaine.com\r\n";
-        $headers .= "X-Mailer: PHP/" . phpversion();
+        // Envoi de l'email de confirmation avec PHPMailer
+        $mail = new PHPMailer(true);
+        try {
+            // Paramètres SMTP
+            $mail->isSMTP();
+            $mail->SMTPDebug = 2;
+            $mail->Host = 'smtp.gmail.com'; // Remplacez par votre serveur SMTP
+            $mail->SMTPAuth = true;
+            $mail->Username = 'lucas.gardes@limayrac.fr'; // Votre adresse email SMTP
+            $mail->Password = 'eojg qizt vtkd uoqh'; // Votre mot de passe ou clé d'application
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 465;
 
-        mail($to, $subject, $message, $headers);
-        $_SESSION['message'] = "Inscription réussie ! Veuillez vérifier votre e-mail pour activer votre compte.";
-        // header("Location: login.php");
-        // exit;
+            // Paramètres de l'e-mail
+            $mail->setFrom('lucas.gardes@limayrac.fr', 'Green City');
+            $mail->addAddress($email);
+            $mail->isHTML(true);
+            $mail->Subject = "Confirmation de votre compte";
+            $mail->Body = "Veuillez cliquer sur ce lien pour confirmer votre compte : 
+            <a href='http://localhost/projetBSI/projetESi/frontend/PHP/verify.php?email=$email'>Activer mon compte</a>";
+
+            $mail->send();
+            $_SESSION['message'] = "Inscription réussie ! Veuillez vérifier votre e-mail pour activer votre compte.";
+            // header("Location: login.php");
+            // exit;
+        } catch (Exception $e) {
+            $_SESSION['error'] = "Erreur lors de l'envoi de l'e-mail : {$mail->ErrorInfo}";
+        }
+        
     }
 }
 $errorMessage = isset($_SESSION['error']) ? $_SESSION['error'] : '';
