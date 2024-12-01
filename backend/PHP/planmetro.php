@@ -90,6 +90,10 @@
         <div id="controls">
             <button onclick="zoomIn()"><i class="fas fa-search-plus"></i></button>
             <button onclick="zoomOut()"><i class="fas fa-search-minus"></i></button>
+            <button onclick="toggleBlockStreetMode()">Bloquer des arret</button>
+            <button onclick="toggleDeleteStreetMode()">Supprimer des arret</button>
+            <button onclick="validateStreetUpdate()">Valider</button>
+            <button onclick="toggleUnblockStreetMode()">Débloquer un arret</button>
         </div>
     </div>
     <script id="stopsData" type="application/json"><?= json_encode($stops); ?></script>

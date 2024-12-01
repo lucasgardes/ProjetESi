@@ -582,7 +582,7 @@
         // };
 
         function updateAllData() {
-            fetch('get_all_data.php')
+            fetch('../../get_all_data.php')
                 .then(response => response.json())
                 .then(newData => {
                     stopsData = newData.stops;     // Remplacer les données des arrêts
@@ -750,22 +750,23 @@
                     }
                 });
             }
+            const userBike = bicyclesData.find(bike => bike.id === id_bike_user);
 
-            bicyclesData.forEach(bike => {
+            if (userBike) {
                 let stationFound = null;
                 Object.entries(data.lines).forEach(([lineName, line]) => {
-                    const station = line.stations.find(s => s.name.toUpperCase().replace(/[- ]/g, '_') === bike.name);
+                    const station = line.stations.find(s => s.name.toUpperCase().replace(/[- ]/g, '_') === userBike.name);
                     if (station) {
                         stationFound = station;
                     }
                 });
-
+        
                 if (stationFound) {
                     drawBicycle(stationFound.x, stationFound.y);
                 } else {
-                    console.error('Station non trouvée pour le vélo : ', bike.name);
+                    console.error('Station non trouvée pour le vélo de l\'utilisateur : ', userBike.name);
                 }
-            });
+            }
 
             ctx.restore();
         }
@@ -774,7 +775,7 @@
             if (zoomLevel < maxZoom) {
                 zoomLevel += zoomIncrement;
                 drawMap();
-                zoomLevelDiv.textContent = 'Zoom Level: ' + zoomLevel.toFixed(1);
+                zoomLevelDiv.textContent = 'Niveau de zoom: ' + zoomLevel.toFixed(1);
             }
         }
 
@@ -782,14 +783,10 @@
             if (zoomLevel > minZoom) {
                 zoomLevel -= zoomIncrement;
                 drawMap();
-                zoomLevelDiv.textContent = 'Zoom Level: ' + zoomLevel.toFixed(1);
+                zoomLevelDiv.textContent = 'Niveau de zoom: ' + zoomLevel.toFixed(1);
             }
         }
 
-        function toggleBackground() {                   //********fonction de contruction de la map******
-            showBackground = !showBackground;
-            drawMap();
-        }
 
         function getStationAt(x, y) {
             for (const [lineName, line] of Object.entries(data.lines)) {
@@ -903,7 +900,7 @@
         //route user
 
         function getBikeRoute() {
-            fetch('get_bike_route.php', {
+            fetch('../../get_bike_route.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -942,7 +939,7 @@
             var rect = canvas.getBoundingClientRect();
             var x = (event.clientX - rect.left) / zoomLevel;
             var y = (event.clientY - rect.top) / zoomLevel;
-            //mousePositionDiv.innerHTML = 'Mouse Position: x= ' + Math.round(x) + ' y= ' + Math.round(y);
+            //mousePositionDiv.innerHTML = 'Position de la souris: x= ' + Math.round(x) + ' y= ' + Math.round(y);
             mousePositionDiv.innerHTML = '"x": ' + Math.round(x) + ', "y": ' + Math.round(y);
             var stationInfo = getStationAt(x - offsetX / zoomLevel, y - offsetY / zoomLevel);
             var bicycleInfo = getBicycleAt(x - offsetX / zoomLevel, y - offsetY / zoomLevel);

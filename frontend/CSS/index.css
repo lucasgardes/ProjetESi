@@ -1,3 +1,10 @@
 body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif}
 .w3-bar,h1,button {font-family: "Montserrat", sans-serif}
 .fa-bicycle,.fa-recycle {font-size:200px}
+
+
+.w3-third .fa-recycle, .w3-third .fa-bicycle {
+    font-size: 100px; /* Remplacez cette valeur par la taille souhaitée */
+    width: auto; /* Empêche la largeur fixe qui peut être imposée */
+    height: auto; /* Empêche une hauteur fixe */
+}

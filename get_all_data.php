@@ -1,5 +1,5 @@
 <?php
-require '../../pdo.php';
+require 'pdo.php';
 
 $stmt = $pdo->prepare("SELECT * FROM stops");
 $stmt->execute();
