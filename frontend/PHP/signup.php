@@ -24,16 +24,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Envoi de l'email de confirmation avec PHPMailer
         $mail = new PHPMailer(true);
+        $config = include('config.php');
         try {
             // Paramètres SMTP
             $mail->isSMTP();
             $mail->SMTPDebug = 2;
-            $mail->Host = 'smtp.gmail.com'; // Remplacez par votre serveur SMTP
+            $mail->Host = $config['smtp_host'];
             $mail->SMTPAuth = true;
-            $mail->Username = 'lucas.gardes@limayrac.fr'; // Votre adresse email SMTP
-            $mail->Password = 'eojg qizt vtkd uoqh'; // Votre mot de passe ou clé d'application
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = 465;
+            $mail->Username = $config['smtp_username'];
+            $mail->Password = $config['smtp_password'];
+            $mail->SMTPSecure = $config['smtp_secure'];
+            $mail->Port = $config['smtp_port'];
+
 
             // Paramètres de l'e-mail
             $mail->setFrom('lucas.gardes@limayrac.fr', 'Green City');
