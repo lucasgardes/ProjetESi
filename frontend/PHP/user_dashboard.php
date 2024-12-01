@@ -35,12 +35,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['start_path'])) {
     $pathId = $_POST['path_id'];
     $stmt = $pdo->prepare("UPDATE paths SET is_assigned = 1 WHERE id = ?");
     $stmt->execute([$pathId]);
+    $stmt = $pdo->prepare("UPDATE bicycles SET path_id = ? WHERE client_id = ?");
+    $stmt->execute([$pathId, $userId]);
     $stmt = $pdo->prepare("INSERT INTO path_history (client_id, path_id) VALUES(?, ?)");
     $stmt->execute([$userId, $pathId]);
 
     // Message de confirmation
     $_SESSION['message'] = "Trajet assigné avec succès.";
-    header("Location: user_dashboard.php");
+    header("Location: planmetro.php");
     exit;
 }
 ?>

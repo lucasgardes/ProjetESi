@@ -41,6 +41,9 @@ $currentPage = basename($_SERVER['PHP_SELF']); // Obtenir le nom de la page actu
                         <a class="nav-link <?= $currentPage == 'manage_bicycles.php' ? 'active' : '' ?>" href="manage_bicycles.php">Gestion des Vélos</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link <?= $currentPage == 'planmetro.php' ? 'active' : '' ?>" href="planmetro.php">Map</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link <?= $currentPage == 'analysis_and_reports.php' ? 'active' : '' ?>" href="analysis_and_reports.php">Rapports & Analyses</a>
                     </li>
                     <li class="nav-item">
