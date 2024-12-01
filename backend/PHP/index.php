@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['backend_user_id'])) {
     header("Location: login.php");
     exit;
 }

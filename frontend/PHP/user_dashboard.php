@@ -4,11 +4,11 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require '../../pdo.php';
 $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['frontend_user_id'])) {
     header("Location: login.php");
     exit;
 }
-$userId = $_SESSION['user_id'];
+$userId = $_SESSION['frontend_user_id'];
 
 $stmt = $pdo->prepare("SELECT ph.id
 FROM bicycles b

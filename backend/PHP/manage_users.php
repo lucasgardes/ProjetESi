@@ -5,7 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require '../../pdo.php';
 
 $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['backend_user_id'])) {
     header("Location: login.php");
     exit;
 }
@@ -13,7 +13,7 @@ if (!isset($_SESSION['user_id'])) {
 $stmt = $pdo->prepare("SELECT u.role
                      FROM users u
                      WHERE u.id = ?");
-$stmt->execute(params: [$_SESSION['user_id']]);
+$stmt->execute(params: [$_SESSION['backend_user_id']]);
 $user_role = $stmt->fetch();
 if ($user_role['role'] != 'admin') {
     if ($user_role['role'] != 'RH') {
@@ -22,7 +22,7 @@ if ($user_role['role'] != 'admin') {
     }
 }
 
-$userId = $_SESSION['user_id'];
+$userId = $_SESSION['backend_user_id'];
 
 // Fetch all users and their associated bicycle if any
 $stmt = $pdo->query("SELECT c.*, b.id AS bicycle_id

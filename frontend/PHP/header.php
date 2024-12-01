@@ -8,8 +8,8 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
 } else {
   $logged = false;
 }
-if (isset($_SESSION['user_id'])) {
-  $userId = $_SESSION['user_id'];
+if (isset($_SESSION['frontend_user_id'])) {
+  $userId = $_SESSION['frontend_user_id'];
   
   $bicycleAssociated = false;
   $stmt = $pdo->prepare("SELECT b.id FROM client c LEFT JOIN bicycles b ON b.client_id = c.id WHERE c.id = ?");

@@ -18,7 +18,7 @@
             // Vérifier le mot de passe avec password_verify()
             if (password_verify($password, $result['password'])) {
                 // Mot de passe correct, connexion réussie
-                $_SESSION['user_id'] = $result['id'];
+                $_SESSION['frontend_user_id'] = $result['id'];
                 $_SESSION['email'] = $email;
                 $_SESSION['loggedin'] = true;
 

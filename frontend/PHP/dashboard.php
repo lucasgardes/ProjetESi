@@ -18,7 +18,7 @@
                     session_start();
                 }
                 $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
-                if (!isset($_SESSION['user_id'])) {
+                if (!isset($_SESSION['frontend_user_id'])) {
                     header("Location: login.php");
                     exit;
                 }
@@ -31,7 +31,7 @@
                 LEFt JOIN stops s4 ON s4.id = p.stop4_id
                 WHERE ph.client_id = ?
                 ORDER BY started_at DESC LIMIT 10");
-                $stmt->execute([$_SESSION['user_id']]);
+                $stmt->execute([$_SESSION['frontend_user_id']]);
                 $activities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 $finishedActivities = [];

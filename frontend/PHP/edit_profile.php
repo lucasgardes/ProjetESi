@@ -5,12 +5,12 @@ if (session_status() === PHP_SESSION_NONE) {
 require '../../pdo.php'; 
 
 $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['frontend_user_id'])) {
     header("Location: login.php");
     exit;
 }
 
-$userId = $_SESSION['user_id'];
+$userId = $_SESSION['frontend_user_id'];
 
 $profileInfoSQL = $pdo->prepare("SELECT firstname, lastname, email FROM client WHERE id = ?");
 $profileInfoSQL->execute([$userId]);
@@ -19,7 +19,7 @@ $user = $profileInfoSQL->fetch();
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!empty($_POST['firstname']) && !empty($_POST['lastname']) && !empty($_POST['email'])) {
         $updateProfileSQL = $pdo->prepare("UPDATE client SET firstname = ?, lastname = ?, email = ? WHERE id = ?");
-        if ($updateProfileSQL->execute([$_POST['firstname'], $_POST['lastname'], $_POST['email'], $_SESSION['user_id']])) {
+        if ($updateProfileSQL->execute([$_POST['firstname'], $_POST['lastname'], $_POST['email'], $_SESSION['frontend_user_id']])) {
             $_SESSION['message'] = "Profil mis à jour avec succès.";
         } else {
             $_SESSION['error'] = "Erreur lors de la mise à jour du profil.";

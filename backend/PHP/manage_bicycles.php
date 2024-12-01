@@ -15,7 +15,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
 $stmt = $pdo->prepare("SELECT u.role
                      FROM users u
                      WHERE u.id = ?");
-$stmt->execute([$_SESSION['user_id']]);
+$stmt->execute([$_SESSION['backend_user_id']]);
 $user_role = $stmt->fetch();
 if ($user_role['role'] != 'admin') {
     if ($user_role['role'] != 'réseau') {

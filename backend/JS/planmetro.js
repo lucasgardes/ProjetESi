@@ -882,7 +882,7 @@ function validateStreetUpdate() {
 
     // Envoi des arrêts à mettre à jour (bloquer, supprimer, débloquer)
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "update_street.php", true);  // Appeler update_street.php
+    xhr.open("POST", "../../update_street.php", true);  // Appeler update_street.php
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
     xhr.onreadystatechange = function() {

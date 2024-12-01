@@ -14,13 +14,13 @@
             session_start();
         }
         $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
-        if (!isset($_SESSION['user_id'])) {
+        if (!isset($_SESSION['backend_user_id'])) {
             header("Location: login.php");
             exit;
         }
 
         $stmt = $pdo->prepare("SELECT b.id FROM bicycles b WHERE b.client_id = ?");
-        $stmt->execute([$_SESSION['user_id']]);
+        $stmt->execute([$_SESSION['backend_user_id']]);
         $bicycle_id = $stmt->fetch(PDO::FETCH_ASSOC);
         $bicycle_id = $bicycle_id['id'];
 
@@ -30,7 +30,7 @@
         LEFT JOIN streets_stops ss ON ss.stop_id = s.id
         LEFT JOIN streets ON streets.id = ss.street_id
         WHERE b.client_id = ?");
-        $stmt->execute([$_SESSION['user_id']]);
+        $stmt->execute([$_SESSION['backend_user_id']]);
         $current = $stmt->fetch(PDO::FETCH_ASSOC);
         $currentStation = $current['StationName'];
 
