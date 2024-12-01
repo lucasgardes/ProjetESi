@@ -53,7 +53,7 @@ canvas {
 /* Position du stationInfo à gauche de la carte */
 #stationInfo {
     position: absolute;
-    left: -50px;
+    left: -270px;
     top: 50%;
     transform: translateY(-50%);
     width: 150px;

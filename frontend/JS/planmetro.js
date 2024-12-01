@@ -2,13 +2,28 @@
         var streetsData = JSON.parse(document.getElementById('streetsData').textContent);
         var bicyclesData = JSON.parse(document.getElementById('bicyclesData').textContent);
         var isPanning = false;
-        var currentStreet = "Croix-Baragnon";
-        var currentStation = "VICTOR_HUGO";
+        var currentStation = JSON.parse(document.getElementById('currentStation').textContent);
         var canvas = document.getElementById("metroMap");
         var mousePositionDiv = document.getElementById("mousePosition");
         var zoomLevelDiv = document.getElementById("zoomLevel");
         var stationInfoDiv = document.getElementById("stationInfo");
         var ctx = canvas.getContext('2d');
+
+        var blockStreetMode = false; // Mode "Block Street"
+        var deleteStreetMode = false; // Mode "Block Street"
+        var unblockStreetMode = false; // Mode "Block Street
+        var blockedStations = JSON.parse(document.getElementById('blockedStations').textContent);// Mode "Block Street"
+        var deletedStations = JSON.parse(document.getElementById('deletedStations').textContent);// Mode "Block Street"
+        var unblockStations = [];
+        blockedStations = blockedStations.map(station => station.name);
+        deletedStations = deletedStations.map(station => station.name);
+        var id_bike_user = JSON.parse(document.getElementById('bicycle_id').textContent);
+        var stopsDataForBike = [];
+
+        window.onload = function() {
+            getBikeRoute();
+            drawMap();
+        };
 
         var zoomLevel = 1;
         var minZoom = 1;
@@ -21,7 +36,7 @@
         var data = {
                 "lines": {
                     "Croix-Baragnon": {
-                        "color": "#FFCD00",
+                        "color": "#111111",
                         "stations": [
                             {"name": "LA_DEFENSE", "x": 212, "y": 235},
                             {"name": "ESPLANADE_DE_LA_DEFENSE", "x": 236, "y": 248},
@@ -51,7 +66,7 @@
                         ]
                     },
                     "Arts": {
-                        "color": "#003CA6",
+                        "color": "#111111",
                         "stations": [
                             {"name": "PORTE_DAUPHINE", "x": 275, "y": 337},
                             {"name": "VICTOR_HUGO", "x": 329, "y": 364},
@@ -81,7 +96,7 @@
                         ]
                     },
                     "Pargaminières": {
-                        "color": "#837902",
+                        "color": "#111111",
                         "stations": [
                             {"name": "PONT_DE_LEVALLOIS_BECON", "x": 401, "y": 194},
                             {"name": "ANATOLE_FRANCE", "x": 419, "y": 205},
@@ -120,7 +135,7 @@
                         ]
                     },
                     "Saint-Antoine du T": {
-                        "color": "#000451",
+                        "color": "#111111",
                         "stations": [
                             {"name": "PORTE_DE_CLIGNANCOURT", "x": 813, "y": 177},
                             {"name": "SIMPLON", "x": 838, "y": 190},
@@ -151,7 +166,7 @@
                         ]
                     },
                     "Fonderie": {
-                        "color": "#168133",
+                        "color": "#111111",
                         "stations": [
                             {"name": "BOBIGNY_PABLO_PICASSO", "x": 1425, "y": 242},
                             {"name": "BOBIGNY_PANTIN_RAYMOND_QUENEAU", "x": 1337, "y": 205},
@@ -473,7 +488,7 @@
                         ]
                     },
                     "Bédelières": {
-                        "color": "#999999",
+                        "color": "#111111",
                         "stations": [
                             {"name": "PONT_DU_GARIGLIANO", "x": 328, "y": 592},
                             {"name": "BALARD", "x": 360, "y": 617},
@@ -499,7 +514,7 @@
                         ]
                     },
                     "Merlane": {
-                        "color": "#999999",
+                        "color": "#111111",
                         "stations": [
                             {"name": "LA_DEFENSE", "x": 212, "y": 235},
                             {"name": "CHARLES_DE_GAULLE_ETOILE", "x": 401, "y": 333},
@@ -522,7 +537,7 @@
                         ]
                     },
                     "Etroite": {
-                        "color": "#524816",
+                        "color": "#111111",
                         "stations": [
                             {"name": "PORTE_DE_CLICHY", "x": 563, "y": 188},
                             {"name": "PEREIRE", "x": 437, "y": 249},
@@ -541,7 +556,7 @@
                         ]
                     },
                     "Tourneurs": {
-                        "color": "#524816",
+                        "color": "#111111",
                         "stations": [
                             {"name": "GARE_DU_NORD", "x": 956, "y": 259},
                             {"name": "CHATELET_LES_HALLES", "x": 846, "y": 406},
@@ -634,21 +649,26 @@
         function drawStation(x, y, text, lineName, empty) {
             ctx.beginPath();
             ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
-
-            if (text === currentStation) {
+            // Mode "Block Street"
+            if (deletedStations.includes(text)) {
+                return;
+            } else if (blockedStations.includes(text)) {
+                ctx.fillStyle = 'yellow';
+                ctx.font = '25px Arial';
+                ctx.fillText('⚠️', x - 40, y + 5);
+            } else if (text === currentStation) {
                 ctx.fillStyle = 'orange';
-            }
-            ctx.fillStyle = currentStreet ? (lineName === currentStreet ? 'blue' : 'white') : 'white';
-            if (empty == 1) {
-                ctx.fillStyle = 'green'; // Déchets ramassés
+            } else if (empty == 1) {
+                ctx.fillStyle = 'green';
             } else {
-                ctx.fillStyle = 'red'; // Déchets non ramassés
+                ctx.fillStyle = 'red';
             }
-            ctx.fill();
 
+            ctx.fill();
             ctx.lineWidth = 2;
             ctx.strokeStyle = 'black';
             ctx.stroke();
+
             if (zoomLevel >= 2) {
                 ctx.fillStyle = 'black';
                 ctx.font = '9px Arial';
@@ -661,10 +681,14 @@
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
-            ctx.strokeStyle = currentStreet ? (lineName === currentStreet ? 'blue' : 'gray') : color;
+
+            // color de la line
             if (empty == 1) {
-                ctx.strokeStyle = 'green'; // Déchets ramassés
+                ctx.strokeStyle = 'green'; // Déchets ramassés donc vert
+            } else {
+                ctx.strokeStyle = color; // color en paramètre
             }
+
             ctx.lineWidth = 4;
             ctx.stroke();
         }
@@ -677,34 +701,55 @@
         }
 
         function drawMap() {
+            console.log("Données des arrêts pour le vélo:", stopsDataForBike);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
             ctx.scale(zoomLevel, zoomLevel);
             ctx.translate(offsetX / zoomLevel, offsetY / zoomLevel);
 
-            // if (showBackground) {
-            //     ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-            // }
-
+            // Dessiner toutes les lignes de métro et stations
             Object.entries(data.lines).forEach(([lineName, line]) => {
                 var lineNameDB = lineName.toUpperCase().replace(/[- ]/g, '_');
-                if (lineName !== currentStreet) {
-                    for (let i = 0; i < line.stations.length - 1; i++) {
-                        var station1 = line.stations[i];
-                        var station2 = line.stations[i + 1];
-                        var stop = stopsData.find(s => s.name === station1.name);
-                        var emptyStopStatus = stop ? stop.empty : 0;
-                        var street = streetsData.find(s => s.name === lineNameDB);
-                        var emptyStreetStatus = street ? street.empty : 0;
-                        drawLine(station1.x, station1.y, station2.x, station2.y, line.color, lineName, emptyStreetStatus);
-                        drawStation(station1.x, station1.y, station1.name, lineName, emptyStopStatus);
-                    }
-                    var lastStation = line.stations[line.stations.length - 1];
-                    var stop = stopsData.find(s => s.name === lastStation.name);
+                for (let i = 0; i < line.stations.length - 1; i++) {
+                    var station1 = line.stations[i];
+                    var station2 = line.stations[i + 1];
+                    var stop = stopsData.find(s => s.name === station1.name);
                     var emptyStopStatus = stop ? stop.empty : 0;
-                    drawStation(lastStation.x, lastStation.y, lastStation.name, lineName, emptyStopStatus);
+                    var street = streetsData.find(s => s.name === lineNameDB);
+                    var emptyStreetStatus = street ? street.empty : 0;
+
+                    drawLine(station1.x, station1.y, station2.x, station2.y, line.color, lineName, emptyStreetStatus);
+                    drawStation(station1.x, station1.y, station1.name, lineName, emptyStopStatus);
                 }
+
+                var lastStation = line.stations[line.stations.length - 1];
+                var stop = stopsData.find(s => s.name === lastStation.name);
+                var emptyStopStatus = stop ? stop.empty : 0;
+                drawStation(lastStation.x, lastStation.y, lastStation.name, lineName, emptyStopStatus);
             });
+            // Dessiner les trajet du vélo (ligne en violet)
+            if (stopsDataForBike && stopsDataForBike.length > 0) {
+                for (let i = 0; i < stopsDataForBike.length - 1; i++) {
+                    const stop1 = stopsDataForBike[i];
+                    const stop2 = stopsDataForBike[i + 1];
+
+                    // Trouver les coordonnées des arrêts
+                    const station1 = getStationByName(stop1.name);
+                    const station2 = getStationByName(stop2.name);
+
+                    if (station1 && station2) {
+                        drawLine(station1.x, station1.y, station2.x, station2.y, 'magenta', 'bikeRoute', 0);
+                    }
+                }
+
+                // Dessiner les arrêts du vélo
+                stopsDataForBike.forEach(stop => {
+                    const station = getStationByName(stop.name);
+                    if (station) {
+                        drawStation(station.x, station.y, station.name, 'bikeRoute', 0);  // Afficher tous les arrêts
+                    }
+                });
+            }
 
             bicyclesData.forEach(bike => {
                 let stationFound = null;
@@ -721,32 +766,6 @@
                     console.error('Station non trouvée pour le vélo : ', bike.name);
                 }
             });
-
-            ctx.restore();
-
-
-            if (currentStreet) {
-                var currentLine = data.lines[currentStreet];
-                for (let i = 0; i < currentLine.stations.length - 1; i++) {
-                    var station1 = currentLine.stations[i];
-                    var station2 = currentLine.stations[i + 1];
-                    var stop = stopsData.find(s => s.name === station1.name);
-                    var emptyStopStatus = stop ? stop.empty : 0;
-                    if (currentStreet.name) {
-                        var currentStreetNameBD = currentStreet.name.toUpperCase().replace(/[- ]/g, '_');
-                        var street = streetsData.find(s => s.name === currentStreetNameBD);
-                    } else {
-                        var street = streetsData.find(s => s.name === currentStreet.name);
-                    }
-                    var emptyStreetStatus = street ? street.empty : 0;
-                    drawLine(station1.x, station1.y, station2.x, station2.y, currentLine.color, currentStreet, emptyStreetStatus);
-                    drawStation(station1.x, station1.y, station1.name, currentStreet, emptyStopStatus);
-                }
-                var lastStation = currentLine.stations[currentLine.stations.length - 1];
-                var stop = stopsData.find(s => s.name === lastStation.name);
-                var emptyStatus = stop ? stop.empty : 0;
-                drawStation(lastStation.x, lastStation.y, lastStation.name, currentStreet, emptyStopStatus);
-            }
 
             ctx.restore();
         }
@@ -772,16 +791,6 @@
             drawMap();
         }
 
-        function getStationInfo(stationName, lineName) {
-            const line = data.lines[lineName];
-            const index = line.stations.findIndex(station => station.name === stationName);
-            const previousStation = index > 0 ? line.stations[index - 1].name : "None";
-            const nextStation = index < line.stations.length - 1 ? line.stations[index + 1].name : "None";
-            const stop = stopsData.find(s => s.name === stationName);
-            const emptyStatus = stop ? (stop.empty == 1 ? "Déchets ramassés" : "Déchets non ramassés") : "Information indisponible";
-            return `Station: ${stationName}\nRue: ${lineName}\nPrécédent: ${previousStation}\nSuivant: ${nextStation}\nÉtat: ${emptyStatus}`;
-        }
-
         function getStationAt(x, y) {
             for (const [lineName, line] of Object.entries(data.lines)) {
                 for (const station of line.stations) {
@@ -793,6 +802,140 @@
                 }
             }
             return null;
+        }
+
+        //---------------------------------------------------
+        //Block Stop Part :
+
+        function toggleBlockStreetMode() {
+            blockStreetMode = !blockStreetMode;
+            deleteStreetMode = false;
+            unblockStreetMode = false;
+            alert(blockStreetMode ? "Mode Bloquer des rues activé. Cliquez sur les arrêts pour les bloquer." : "Mode Bloquer des rues désactivé.");
+        }
+
+        function toggleDeleteStreetMode() {
+            deleteStreetMode = !deleteStreetMode;
+            blockStreetMode = false;
+            unblockStreetMode = false;
+            alert(deleteStreetMode ? "Mode Supprimer des rues activé. Cliquez sur les arrêts pour les supprimer." : "Mode Supprimer des rues désactivé.");
+        }
+
+        function toggleUnblockStreetMode() {
+            unblockStreetMode = !unblockStreetMode;
+            blockStreetMode = false;
+            deleteStreetMode = false;
+            alert(unblockStreetMode ? "Mode Débloquer des arrêts activé." : "Mode Débloquer des arrêts désactivé.");
+        }
+
+        canvas.addEventListener('click', function(event) {
+            var rect = canvas.getBoundingClientRect();
+            var x = (event.clientX - rect.left) / zoomLevel;
+            var y = (event.clientY - rect.top) / zoomLevel;
+            var stationInfo = getStationAt(x - offsetX / zoomLevel, y - offsetY / zoomLevel);
+
+            if (stationInfo) {
+                var stationName = stationInfo.station.name;
+
+                // Mode "Bloquer"
+                if (blockStreetMode) {
+                    if (!blockedStations.includes(stationName)) {
+                        blockedStations.push(stationName);
+                    }
+                }
+                // Mode "Supprimer"
+                else if (deleteStreetMode) {
+                    if (!deletedStations.includes(stationName)) {
+                        deletedStations.push(stationName);
+                    }
+                }
+                // Mode "Débloquer"
+                else if (unblockStreetMode) {
+                    // Retirer l'arrêt de la liste des bloqués
+                    if (blockedStations.includes(stationName)) {
+                        blockedStations = blockedStations.filter(station => station !== stationName);
+                    }
+                    // Retirer l'arrêt de la liste des supprimés
+                    if (deletedStations.includes(stationName)) {
+                        deletedStations = deletedStations.filter(station => station !== stationName);
+                    }
+                    // Ajouter à la liste des débloqués si nécessaire
+                    if (!unblockStations.includes(stationName)) {
+                        unblockStations.push(stationName);
+                    }
+                }
+
+                drawMap();  // Redessiner la carte après mise à jour
+            }
+        });
+
+        function validateStreetUpdate() {
+            if (blockedStations.length === 0 && deletedStations.length === 0 && unblockStations.length === 0) {
+                alert("Aucun arrêt sélectionné.");
+                return;
+            }
+
+            // Envoi des arrêts à mettre à jour (bloquer, supprimer, débloquer)
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "update_street.php", true);  // Appeler update_street.php
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        alert("Les arrêts sélectionnés ont été mis à jour.");
+                        drawMap();  // Redessiner la carte avec les nouvelles données
+                    } else {
+                        alert("Erreur lors de la mise à jour des arrêts.");
+                    }
+                }
+            };
+
+            // Envoi des données des arrêts bloqués, supprimés et débloqués
+            xhr.send("blockedStations=" + JSON.stringify(blockedStations) +
+                    "&deletedStations=" + JSON.stringify(deletedStations) +
+                    "&unblockStations=" + JSON.stringify(unblockStations));  // Envoyer aussi les débloqués
+        }
+
+                    //fin block mode
+        //---------------------------------------------------
+
+        //route user
+
+        function getBikeRoute() {
+            fetch('get_bike_route.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ bike_id: id_bike_user })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    stopsDataForBike = data.stops; // Assurez-vous que les données sont bien récupérées
+                    drawMap();  // Redessiner la carte avec les arrêts du vélo
+                } else {
+                    console.error('Erreur:', data.message);
+                }
+            })
+            .catch(error => console.error('Erreur AJAX:', error));
+        }
+        
+        
+
+        
+            //fin route user
+        //---------------------------------------------------
+
+        function getStationInfo(stationName, lineName) {
+            const line = data.lines[lineName];
+            const index = line.stations.findIndex(station => station.name === stationName);
+            const previousStation = index > 0 ? line.stations[index - 1].name : "None";
+            const nextStation = index < line.stations.length - 1 ? line.stations[index + 1].name : "None";
+            const stop = stopsData.find(s => s.name === stationName);
+            const emptyStatus = stop ? (stop.empty == 1 ? "Déchets ramassés" : "Déchets non ramassés") : "Information indisponible";
+            return `Station: ${stationName}\nRue: ${lineName}\nPrécédent: ${previousStation}\nSuivant: ${nextStation}\nÉtat: ${emptyStatus}`;
         }
 
         canvas.addEventListener('mousemove', function(event) {      //********fonction de contruction de la map******
