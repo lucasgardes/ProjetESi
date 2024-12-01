@@ -11,10 +11,16 @@
         $email = $post['email'];
         $password = $post['password'];
 
-        $stmt = $pdo->prepare("SELECT id, password FROM client WHERE email = ?");
+        $stmt = $pdo->prepare("SELECT id, password, verified FROM client WHERE email = ?");
         $stmt->execute([$email]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($result) {
+            // Vérifier si le compte est activé
+            if ($result['verified'] == 0) {
+                $_SESSION['error'] = "Veuillez activer votre compte depuis vos emails.";
+                header("Location: login.php");
+                exit;
+            }
             // Vérifier le mot de passe avec password_verify()
             if (password_verify($password, $result['password'])) {
                 // Mot de passe correct, connexion réussie

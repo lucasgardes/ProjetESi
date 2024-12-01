@@ -37,8 +37,6 @@ $bicycles_available = $stmt->fetchAll();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['update_user_infos'])) {
-        $stmt = $pdo->prepare("UPDATE client SET `admin` = ? WHERE id = ?");
-        $stmt->execute([$_POST['is_admin'], $_POST['user_id']]);
         if (isset($_POST['previous_bicycle_id']) && !is_null($_POST['previous_bicycle_id'])) {
             $stmt = $pdo->prepare("UPDATE bicycles SET client_id = NULL WHERE id = ?");
             $stmt->execute([$_POST['previous_bicycle_id']]);

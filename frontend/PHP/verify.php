@@ -17,7 +17,7 @@ if ($conn->connect_error) {
 
 if (isset($_GET['email'])) {
     $email = $_GET['email'];
-    $sql = "UPDATE users SET verified = 1 WHERE email = " . $email;
+    $sql = "UPDATE client SET verified = 1 WHERE email = " . $email;
     $result = $conn->query($sql);
 
     header('Location: index.php');

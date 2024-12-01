@@ -15,21 +15,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['error'] = "Un compte existe déjà pour cette adresse mail";
     } else {
         // Insertion des données
-        $insert = $pdo->prepare("INSERT INTO client (firstname, lastname, email, `password`, `admin`) VALUES (?, ?, ?, ?, 0)");
+        $insert = $pdo->prepare("INSERT INTO client (firstname, lastname, email, `password`, `verified`) VALUES (?, ?, ?, ?, 0)");
         $insert->execute([$_POST['firstname'], $_POST['lastname'], $email, $password]);
 
         // Envoi de l'email de confirmation
         $to = $email;
         $subject = "Confirmation de votre compte";
-        $message = "Veuillez cliquer sur ce lien pour confirmer votre compte : http://localhost/projetBSI/projetESi/PHP/verify.php?email=$email";
+        $message = "Veuillez cliquer sur ce lien pour confirmer votre compte : http://localhost/projetBSI/projetESi/frontend/PHP/verify.php?email=$email";
         $headers = "From: no-reply@votredomaine.com\r\n";
         $headers .= "Reply-To: no-reply@votredomaine.com\r\n";
         $headers .= "X-Mailer: PHP/" . phpversion();
 
         mail($to, $subject, $message, $headers);
         $_SESSION['message'] = "Inscription réussie ! Veuillez vérifier votre e-mail pour activer votre compte.";
-        header("Location: login.php");
-        exit;
+        // header("Location: login.php");
+        // exit;
     }
 }
 $errorMessage = isset($_SESSION['error']) ? $_SESSION['error'] : '';

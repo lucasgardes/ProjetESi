@@ -12,15 +12,6 @@ if (!isset($_SESSION['frontend_user_id'])) {
     exit;
 }
 $userId = $_SESSION['frontend_user_id'];
-$stmt = $pdo->prepare("SELECT c.admin
-FROM client c
-WHERE c.id = ?");
-$stmt->execute([$userId]);
-$clientAdminInfo = $stmt->fetch();
-if (!$clientAdminInfo['admin']) {
-    header("Location: index.php");
-    exit;
-}
 
 // Fetch all bicycles with their current status and assigned paths if any
 $stmt = $pdo->query("SELECT b.id, p.id AS path_id, p.start_stop_id, s1.name AS stop1Name, s2.name AS stop2Name, s3.name AS stop3Name, s4.name AS stop4Name
