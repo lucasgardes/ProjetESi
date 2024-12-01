@@ -60,6 +60,7 @@ if (isset($_SESSION['frontend_user_id'])) {
               <li><a class="dropdown-item" href="user_dashboard.php">Choisir un Itinéraire</a></li>
               <li><a class="dropdown-item" href="planmetro.php">Map</a></li>
             <?php endif; ?>
+            <li><a class="dropdown-item" href="contact.php">Contact</a></li>
             <li><a class="dropdown-item" href="logout.php">Déconnexion</a></li>
           </ul>
         </li>
