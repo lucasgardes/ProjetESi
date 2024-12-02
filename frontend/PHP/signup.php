@@ -47,8 +47,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $mail->send();
             $_SESSION['message'] = "Inscription réussie ! Veuillez vérifier votre e-mail pour activer votre compte.";
-            // header("Location: login.php");
-            // exit;
+            header("Location: login.php");
+            exit;
         } catch (Exception $e) {
             $_SESSION['error'] = "Erreur lors de l'envoi de l'e-mail : {$mail->ErrorInfo}";
         }
