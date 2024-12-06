@@ -3,15 +3,15 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require '../../pdo.php';
-require 'graph.php';
-require_once 'class/bicycle.php';
+require '../../frontend/PHP/graph.php';
+require_once '../../frontend/PHP/class/bicycle.php';
 
 $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
-if (!isset($_SESSION['frontend_user_id'])) {
+if (!isset($_SESSION['backend_user_id'])) {
     header("Location: login.php");
     exit;
 }
-$userId = $_SESSION['frontend_user_id'];
+$userId = $_SESSION['backend_user_id'];
 
 // Fetch all bicycles with their current status and assigned paths if any
 $stmt = $pdo->query("SELECT b.id, p.id AS path_id, p.start_stop_id, s1.name AS stop1Name, s2.name AS stop2Name, s3.name AS stop3Name, s4.name AS stop4Name
@@ -37,17 +37,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['start_trip'])) {
     $stmt->execute([$_POST['bicycle_id']]);
     $bicycleInfo = $stmt->fetch();
     $bicycle = new Bicycle($_POST['bicycle_id'], $bicycleInfo['name'], $pdo);
-    $bicycle->moveToDestination($path["start_stop_id"], $graph);
     $stops = ['stop4_id', 'stop3_id', 'stop2_id'];
-    foreach ($stops as $stop) {
-        if (isset($path[$stop]) && !is_null($path[$stop])) {
-            $bicycle->moveToDestination($path[$stop], $graph, true, $path);
-            break;
+    $bicycle->moveToDestination($path["start_stop_id"], $graph, false)->then(function () use ($bicycle, $path, $graph) {
+        // Déplacement principal (trajet défini dans les stops)
+        $stops = ['stop4_id', 'stop3_id', 'stop2_id'];
+        foreach ($stops as $stop) {
+            if (isset($path[$stop]) && !is_null($path[$stop])) {
+                $promises[] = $bicycle->moveToDestination($path[$stop], $graph, true, $path);
+                break;
+            }
         }
-    }
-    if ($bicycle->currentLoad == 200) {
-        $bicycle->returnToBase($graph);
-    }
+        return \React\Promise\all($promises);
+        })->then(function () use ($bicycle, $graph) {
+            // Vérifier la charge après tous les déplacements
+            if ($bicycle->currentLoad == 200) {
+                $bicycle->returnToBase($graph);
+            }
+    });
     header("Location: startPath.php");
     exit;
 }

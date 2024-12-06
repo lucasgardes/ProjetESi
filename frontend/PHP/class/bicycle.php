@@ -1,4 +1,5 @@
 <?php
+require '../../vendor/autoload.php';
 use React\EventLoop\Loop;
 use React\Promise\Promise;
 include '../../pdo.php';
@@ -169,8 +170,7 @@ class Bicycle {
     public function moveToDestination($destination, $graph, $picking = false, $path = null) {
         return new Promise(function ($resolve) use ($destination, $graph, $picking, $path) {
             $loop = Loop::get();
-    
-            if (ctype_digit($destination)) {
+            if (is_int($destination) || (is_string($destination) && ctype_digit($destination))) {
                 $stmt = $this->pdo->prepare("SELECT s.name FROM stops s WHERE s.id = ?");
                 $stmt->execute([$destination]);
                 $data = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -186,23 +186,31 @@ class Bicycle {
             if (is_null($path)) {
                 $path = $this->determinPathToDestination($graph, $this->position, $destination);
             }
-    
             $this->executeNextMove($graph, $path, $destination, 1, $resolve);
         });
     }
 
     public function executeNextMove($graph, $path, $destination, $i, $resolve) {
         $loop = Loop::get();
-    
         if ($this->position != $destination && $this->autonomy > 0) {
             if (isset($path[$i])) {
                 $nextStop = $path[$i];
-    
+                if (is_int($nextStop)) {
+                    $stmt = $this->pdo->prepare("SELECT s.name FROM stops s WHERE id = ?");
+                    $stmt->execute([$nextStop]);
+                    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $nextStop = $data['name'];
+                }
                 $loop->addTimer(3, function () use ($graph, $path, $destination, $nextStop, $i, $resolve) {
-                    $this->moveToNextStop($graph, $nextStop);
-    
-                    // Continue to the next stop
-                    $this->executeNextMove($graph, $path, $destination, $i + 1, $resolve);
+                    $this->moveToNextStop($graph, $nextStop)->then(function ($success) use ($graph, $path, $destination, $i, $resolve) {
+                        if ($success) {
+                            // Continue vers l'arrêt suivant
+                            $this->executeNextMove($graph, $path, $destination, $i + 1, $resolve);
+                        } else {
+                            // Arrêter si l'opération a échoué
+                            $resolve(false);
+                        }
+                    });
                 });
             }
         } else {
@@ -226,37 +234,43 @@ class Bicycle {
 
 
     public function moveToNextStop($graph, $nextStop) {
-        $stmt = $this->pdo->prepare("SELECT etat FROM blocked_stop WHERE name = ?");
-        $stmt->execute([$nextStop]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($data && $data['etat'] === 'blocked') {
-            echo "\nStop " . $nextStop . " is blocked. Bicycle " . $this->id . " cannot proceed.";
-            $this->returnToBase($graph); // Retourner à la base ou recalculer le chemin
-            return;
-        }
-        
-        if ($this->returnToBase) {
-            $this->autonomy -= 0.5;
-            $this->updatePosition($nextStop);
-        } else {
-            $pathToBase = $this->determinPathToDestination($graph, $nextStop, $this->baseLocation);
-            $stopsToBase = count($pathToBase);
-            $requiredAutonomy = $stopsToBase * 0.5;
-            echo "\nrequiredAutonomy " . $requiredAutonomy;
-            if ($this->autonomy - 0.5 >= $requiredAutonomy) {
-                echo "\nBicycle " . $this->id . "move to " . $nextStop;
-                echo "\nBicycle " . $this->id . "Autonomy : " . $this->autonomy;
-                echo "\nBicycle " . $this->id . "Load : " . $this->currentLoad;
+        return new Promise(function ($resolve) use ($graph, $nextStop) {
+            $stmt = $this->pdo->prepare("SELECT etat FROM blocked_stop WHERE name = ?");
+            $stmt->execute([$nextStop]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+            if ($data && $data['etat'] === 'blocked') {
+                echo "\nStop " . $nextStop . " is blocked. Bicycle " . $this->id . " cannot proceed.";
+                $this->returnToBase($graph);
+                $resolve(false); // La promesse échoue si l'arrêt est bloqué
+                return;
+            }
+    
+            if ($this->returnToBase) {
                 $this->autonomy -= 0.5;
                 $this->updatePosition($nextStop);
-                if ($this->picking) {
-                    $this->updateLoad();
-                }
             } else {
-                $this->returnToBase($graph);
+                $pathToBase = $this->determinPathToDestination($graph, $nextStop, $this->baseLocation);
+                $stopsToBase = count($pathToBase);
+                $requiredAutonomy = $stopsToBase * 0.5;
+                echo "\nrequiredAutonomy " . $requiredAutonomy;
+                if ($this->autonomy - 0.5 >= $requiredAutonomy) {
+                    echo "\nBicycle " . $this->id . "move to " . $nextStop;
+                    echo "\nBicycle " . $this->id . "Autonomy : " . $this->autonomy;
+                    echo "\nBicycle " . $this->id . "Load : " . $this->currentLoad;
+                    $this->autonomy -= 0.5;
+                    $this->updatePosition($nextStop);
+                    if ($this->picking) {
+                        $this->updateLoad();
+                    }
+                } else {
+                    $this->returnToBase($graph);
+                }
             }
-        }
+    
+            // Fin de l'opération
+            $resolve(true); // La promesse est résolue avec succès
+        });
     }
 }
 ?>

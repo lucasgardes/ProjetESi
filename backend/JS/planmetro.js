@@ -613,7 +613,7 @@ function getLineByStation(station) {
 }
 
 // Appeler la fonction toutes les 30 secondes
-setInterval(updateAllData, 30000);
+setInterval(updateAllData, 3000);
 updateAllData();
 
 function getBicycleInfo(bicycle) {
